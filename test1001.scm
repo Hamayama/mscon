@@ -113,16 +113,21 @@
   ;; 花火の表示
   (for-each
     (lambda (hb)
-      (let ((act  (slot-ref hb 'act))
-            (x    (slot-ref hb 'x))
-            (y    (slot-ref hb 'y))
-            (col  (slot-ref hb 'col)))
+      (let ((act (slot-ref hb 'act))
+            (x   (slot-ref hb 'x))
+            (y   (slot-ref hb 'y))
+            (col (slot-ref hb 'col)))
         (if (> act 0)
           (begin
-            (set! x  (x->integer x))
-            (set! y  (x->integer y))
+            (set! x (x->integer (floor x)))
+            (set! y (x->integer (floor y)))
+            ;(color col)
+            ;(locate x y)
+            ;(display "*")
+            ;(flush)
             (if (mscon-all-available?) (putcolor 1 x y col))
-            (puttext "*" x y)))))
+            (puttext "*" x y)
+            ))))
     hanalist)
 
   ;; 花火の消去
@@ -138,6 +143,6 @@
   (if (mscon-all-available?)
     (let1 ks (keywait2 wait wait)
       (if (not (null? ks)) (set! done #t)))
-    (sys-nanosleep (* (/. wait 2) 1000000)))
+    (sys-nanosleep (* (/ wait 2) 1000000)))
   )
 
