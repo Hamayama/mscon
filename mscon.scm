@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-6-22 v1.00
+;; 2014-6-22 v1.01
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -40,6 +40,10 @@
 ;;
 ;;   (3)puttextが、colorで指定した色では表示しない。
 ;;      (色をつけるにはputcolorと併用する必要がある)
+;;
+;;   (4)リダイレクトには非対応(エラーになる)。
+;;
+;;   (5)Windows8上のGauche v0.9.3.3では、しばらく動いた後に実行時エラーが出る。
 ;;
 (define-module mscon
   (use gauche.uvector)
