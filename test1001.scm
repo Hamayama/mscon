@@ -100,7 +100,7 @@
                       (slot-set! hb2 'x    x)
                       (slot-set! hb2 'y    y)
                       (slot-set! hb2 'rad  rad1)
-                      (slot-set! hb2 'spd  (* cycle 2))
+                      (slot-set! hb2 'spd  (* cycle 2.3))
                       (slot-set! hb2 'divx divx)
                       (slot-set! hb2 'divy divy)
                       (slot-set! hb2 'col  col)
