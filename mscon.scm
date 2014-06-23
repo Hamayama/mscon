@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-6-23 v1.04
+;; 2014-6-24 v1.05
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -105,6 +105,7 @@
 (define VK_RCONTROL #xA3)
 (define VK_LMENU    #xA4)
 (define VK_RMENU    #xA5)
+
 
 ;; 全機能利用可能か
 (define (mscon-all-available?)
