@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-6-23 v1.02
+;; 2014-6-23 v1.03
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -44,7 +44,7 @@
 ;;
 ;;   (4)リダイレクトには非対応(エラーになる)。
 ;;
-;;   (5)Windows8上のGauche v0.9.3.3では、しばらく動いた後に実行時エラーが出る(原因不明)。
+;;   (5)Windows 8上のGauche v0.9.3.3では、しばらく動いた後に実行時エラーが出る(原因不明)。
 ;;
 (define-module mscon
   (use gauche.uvector)
@@ -93,10 +93,18 @@
 (define SHIFT_PRESSED      #x10)
 
 ;; 仮想キーコードの定数
-(define VK_SHIFT   16)
-(define VK_CONTROL 17)
-(define VK_MENU    18)
-
+(define VK_SHIFT    #x10)
+(define VK_CONTROL  #x11)
+(define VK_MENU     #x12)
+(define VK_LWIN     #x5B)
+(define VK_RWIN     #x5C)
+(define VK_APPS     #x5D)
+(define VK_LSHIFT   #xA0)
+(define VK_RSHIFT   #xA1)
+(define VK_LCONTROL #xA2)
+(define VK_RCONTROL #xA3)
+(define VK_LMENU    #xA4)
+(define VK_RMENU    #xA5)
 
 ;; 全機能利用可能か
 (define (mscon-all-available?)
@@ -240,23 +248,32 @@
 (define (keywait2 :optional (timeout 0) (interval 100))
   (let ((done      #f)
         (ks        '())
-        (timecount 0))
+        (timecount 0)
+        ;; [shift]と[ctrl]と[alt]は除外。Windowsキーとアプリキーも除外
+        (ignorevk  (list VK_SHIFT    VK_CONTROL  VK_MENU     VK_LWIN
+                         VK_RWIN     VK_APPS     VK_LSHIFT   VK_RSHIFT
+                         VK_LCONTROL VK_RCONTROL VK_LMENU    VK_RMENU)))
     (while (not done)
       (let1 kslist (keystate)
         ;(print kslist)
         (while (not (null? kslist))
           (set! ks (car kslist))
           (receive (kdown ch vk sft ctl alt) (apply values ks)
-            ;; [shift]と[ctrl]と[alt]は除外
-            (if (and (= kdown 1) (not (or (= vk VK_SHIFT) (= vk VK_CONTROL) (= vk VK_MENU) (and (>= vk #xA0) (<= vk #xA5)))))
-              (set! done #t)))
-          (set! kslist (cdr kslist)))
-        (sys-nanosleep (* interval 1000000))
-        (if (> timeout 0)
+            (if (and (= kdown 1) (not (find (cut = vk <>) ignorevk)))
+              (begin
+                (set! done #t)
+                (set! kslist '()))
+              (set! kslist (cdr kslist)))))
+        (if (not done)
           (begin
-            (set! timecount (+ timecount interval))
-            (if (>= timecount timeout)
-              (set! done #t))))))
+            (sys-nanosleep (* interval 1000000))
+            (if (> timeout 0) 
+              (begin
+                (set! timecount (+ timecount interval))
+                (if (>= timecount timeout)
+                  (begin
+                    (set! done #t)
+                    (set! ks '())))))))))
     ks))
 
 ;; キーボード入力クリア

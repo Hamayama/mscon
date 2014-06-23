@@ -142,7 +142,10 @@
   ;; キー入力のチェックとウェイト
   (if (mscon-all-available?)
     (let1 ks (keywait2 wait wait)
-      (if (not (null? ks)) (set! done #t)))
+      (if (not (null? ks))
+        (begin
+          ;(print ks)
+          (set! done #t))))
     (sys-nanosleep (* (/ wait 2) 1000000)))
   )
 
