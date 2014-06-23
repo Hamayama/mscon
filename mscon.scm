@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-6-23 v1.03
+;; 2014-6-23 v1.04
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -127,8 +127,8 @@
       (let ((bw (slot-ref cinfo 'size.x))
             (bh (slot-ref cinfo 'size.y))
             (cattr (get-color-attr fc bc)))
-        (sys-fill-console-output-attribute hdl cattr (* bw bh) 0 0)
-        (sys-fill-console-output-character hdl " "   (* bw bh) 0 0)
+        (sys-fill-console-output-attribute hdl cattr   (* bw bh) 0 0)
+        (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
         (sys-set-console-cursor-position hdl 0 0)))))
 
 ;; 画面の幅を取得
