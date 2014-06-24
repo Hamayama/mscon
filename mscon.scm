@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-6-24 v1.05
+;; 2014-6-24 v1.06
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -64,7 +64,7 @@
 
 
 ;; 標準入出力のハンドルの保持
-;; (保持しておかないとエラーになる。Gaucheの開発最新版では修正ずみ)
+;; (保持しておかないとエラーになる。Gauche v0.9.4-rc2では修正ずみ)
 (define stdin-handle  (sys-get-std-handle STD_INPUT_HANDLE))
 (define stdout-handle (sys-get-std-handle STD_OUTPUT_HANDLE))
 (define stderr-handle (sys-get-std-handle STD_ERROR_HANDLE))
@@ -239,7 +239,7 @@
           (receive (kdown ch vk sft ctl alt) (apply values (car kslist))
             (cond
               ((and (= kdown 1) (= vk 27)) (set! done #t))
-              ((not (and (= kdown 0) (= ch 0) (= vk 0) (= sft 0) (= ctl 0) (= alt 0)))
+              ((not (= kdown ch vk sft ctl alt 0))
                 (print " keydown=" kdown " unicode-char=" ch " virtual-key-code=" vk " shift=" sft " ctrl=" ctl " alt=" alt))))
           (set! kslist (cdr kslist)))
         (sys-nanosleep (* 100 1000000))))) ; 100msec
