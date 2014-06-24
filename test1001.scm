@@ -150,6 +150,6 @@
         (begin
           ;(print ks)
           (set! done #t))))
-    (sys-nanosleep (* (/ wait 2) 1000000)))
+    (sys-nanosleep (* wait 1000000)))
   )
 

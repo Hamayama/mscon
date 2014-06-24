@@ -55,7 +55,7 @@
  - Windows XP Home SP3
  - Windows 8 (64bit)
 - 言語
- - Gauche v0.9.4-rc0
+ - Gauche v0.9.4-rc2
  - Gauche v0.9.3.3  
 
 ## 履歴
