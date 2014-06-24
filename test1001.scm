@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; Windowsコンソールで花火の表示
+;; Windowsコンソールで花火の表示 (msconモジュールのテスト)
 ;;
 (add-load-path "." :relative)
 (use mscon)
@@ -89,6 +89,7 @@
             (if (<= tim 0)
               (begin
                 (if (= act 1)
+                  ;; 爆発の分を生成
                   (do ((i     0 (+ i 1))
                        (rad1  0 (+ rad1 pi/4))
                        (cycle 0))
