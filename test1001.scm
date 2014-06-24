@@ -57,7 +57,7 @@
       (slot-set! hb 'spd  5)
       (slot-set! hb 'divx 1)
       (slot-set! hb 'divy 2.2)
-      (slot-set! hb 'col  15)
+      (slot-set! hb 'col  (randint 10 15))
       (push! hanalist hb)))
 
   ;; 花火の移動と爆発
@@ -125,13 +125,16 @@
           (begin
             (set! x (x->integer (floor x)))
             (set! y (x->integer (floor y)))
-            ;(color col)
-            ;(locate x y)
-            ;(display "*")
-            ;(flush)
-            (if (mscon-all-available?) (putcolor 1 x y col))
-            (puttext "*" x y)
-            ))))
+            (if (mscon-all-available?)
+              (begin
+                (putcolor 2 x y col)
+                (puttext "★" x y))
+              (begin
+                ;(color 15)
+                ;(locate x y)
+                ;(display "*")
+                ;(flush)
+                (puttext "*" x y)))))))
     hanalist)
 
   ;; 花火の消去
