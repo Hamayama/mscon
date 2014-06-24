@@ -1,6 +1,6 @@
 ;; -*- coding: utf-8 -*-
 ;;
-;; Windowsコンソールで花火の表示 (msconモジュールのテスト)
+;; Windowsコンソールで花火の表示 (msconモジュールのテスト用)
 ;;
 (add-load-path "." :relative)
 (use mscon)
@@ -76,6 +76,7 @@
             (vy   0))
         (if (> act 0)
           (begin
+            ;; 移動
             (set! vx  (/. (*. spd (cos rad)) divx))
             (set! vy  (/. (*. spd (sin rad)) divy))
             (set! x   (+ x vx))
@@ -86,10 +87,14 @@
             (slot-set! hb 'y   y)
             (slot-set! hb 'spd spd)
             (slot-set! hb 'tim tim)
+            (if (or (< x 0) (>= x wd) (< y 0) (>= y ht))
+              (begin
+                (set! act 0)
+                (slot-set! hb 'act 0)))
             (if (<= tim 0)
               (begin
                 (if (= act 1)
-                  ;; 爆発の分を生成
+                  ;; 爆発
                   (do ((i     0 (+ i 1))
                        (rad1  0 (+ rad1 pi/4))
                        (cycle 0))
@@ -106,9 +111,7 @@
                       (slot-set! hb2 'divy divy)
                       (slot-set! hb2 'col  col)
                       (push! hanalist hb2))))
-                (slot-set! hb 'act 0)))
-            (if (or (< x 0) (>= x wd) (< y 0) (>= y ht))
-              (slot-set! hb 'act 0))))))
+                (slot-set! hb 'act 0)))))))
     hanalist)
 
   ;; 花火の表示
