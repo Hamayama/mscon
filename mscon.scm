@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-6-24 v1.06
+;; 2014-6-25 v1.07
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -250,10 +250,12 @@
   (let ((done      #f)
         (ks        '())
         (timecount 0)
+        (interval2 interval)
         ;; [shift]と[ctrl]と[alt]は除外。Windowsキーとアプリキーも除外
         (ignorevk  (list VK_SHIFT    VK_CONTROL  VK_MENU     VK_LWIN
                          VK_RWIN     VK_APPS     VK_LSHIFT   VK_RSHIFT
                          VK_LCONTROL VK_RCONTROL VK_LMENU    VK_RMENU)))
+    (if (<= interval2 0) (set! interval2 100))
     (while (not done)
       (let1 kslist (keystate)
         ;(print kslist)
@@ -265,16 +267,13 @@
                 (set! done #t)
                 (set! kslist '()))
               (set! kslist (cdr kslist)))))
-        (if (not done)
-          (begin
-            (sys-nanosleep (* interval 1000000))
-            (if (> timeout 0) 
-              (begin
-                (set! timecount (+ timecount interval))
-                (if (>= timecount timeout)
-                  (begin
-                    (set! done #t)
-                    (set! ks '())))))))))
+        (when (not done)
+          (sys-nanosleep (* interval2 1000000))
+          (when (> timeout 0)
+            (set! timecount (+ timecount interval2))
+            (when (>= timecount timeout)
+              (set! done #t)
+              (set! ks '()))))))
     ks))
 
 ;; キーボード入力クリア
