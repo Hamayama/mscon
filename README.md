@@ -17,17 +17,21 @@
   (use mscon)                  ; モジュールをロードします
   (cls)                        ; 画面をクリアします(コマンドのため遅い)
   (cls2)                       ; 画面をクリアします2(*)
-  (screen-width)               ; 画面の幅を取得します(文字数)
-  (screen-height)              ; 画面の高さを取得します(文字数)
-  (cursor-on)                  ; カーソルを表示します
+  (screen-left)                ; 画面の左上のx座標を取得します(単位:文字)
+  (screen-top)                 ; 画面の左上のy座標を取得します(単位:文字)
+  (screen-width)               ; 画面の幅を取得します(単位:文字)
+  (screen-height)              ; 画面の高さを取得します(単位:文字)
+  (cursor-x)                   ; カーソルのx座標を取得します(単位:文字)
+  (cursor-y)                   ; カーソルのy座標を取得します(単位:文字)
   (cursor-off)                 ; カーソルを非表示にします
+  (cursor-on)                  ; カーソルを表示します
+  (locate 10 10)               ; カーソルを座標(x,y)に移動します(単位:文字)
   (color COL_GREEN)            ; 色を設定します
-  (locate 10 10)               ; カーソルを座標(x,y)に移動します
   (print "HIT ANY KEY!")       ;
   (keywait)                    ; キーボードの入力を待ちます
   (keystate)                   ; キーボードの状態を取得します(*)
   (keystate-test)              ; キーボード状態取得テスト用です(*)
-  (keywait2)                   ; キーボードの入力を待ちます2(タイムアウト設定可)(*)
+  (keywait2 3000)              ; キーボードの入力を待ちます2(タイムアウト設定可能(msec))(*)
   (keyclear)                   ; キーボードの入力をクリアします(*)
   (puttext "ABCDE" 10 10)      ; 座標(x,y)に文字列を表示します
   (putcolor 5 10 10 COL_GREEN) ; 座標(x,y)からn文字分に色を設定します(*)
@@ -52,10 +56,10 @@
 
 ## 環境等
 - OS
- - Windows XP Home SP3
+ - Windows XP Home SP3 (32bit)
  - Windows 8 (64bit)
 - 言語
- - Gauche v0.9.4-rc2
+ - Gauche v0.9.4
  - Gauche v0.9.3.3  
 
 ## 履歴
@@ -68,6 +72,8 @@
 - 2014-6-24 v1.05 コメント修正のみ
 - 2014-6-24 v1.06 keystate-testの処理を一部見直し
 - 2014-6-25 v1.07 keywait2の処理を修正
+- 2014-7-21 v1.08 コマンド追加(screen-left,screen-top,cursor-x,cursor-y)  
+  一部処理見直し
 
 
-(2014-6-25)
+(2014-7-21)

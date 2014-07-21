@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-6-25 v1.07
+;; 2014-7-21 v1.08
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -15,17 +15,21 @@
 ;;   (use mscon)                  ; モジュールをロードします
 ;;   (cls)                        ; 画面をクリアします(コマンドのため遅い)
 ;;   (cls2)                       ; 画面をクリアします2(*)
-;;   (screen-width)               ; 画面の幅を取得します(文字数)
-;;   (screen-height)              ; 画面の高さを取得します(文字数)
-;;   (cursor-on)                  ; カーソルを表示します
+;;   (screen-left)                ; 画面の左上のx座標を取得します(単位:文字)
+;;   (screen-top)                 ; 画面の左上のy座標を取得します(単位:文字)
+;;   (screen-width)               ; 画面の幅を取得します(単位:文字)
+;;   (screen-height)              ; 画面の高さを取得します(単位:文字)
+;;   (cursor-x)                   ; カーソルのx座標を取得します(単位:文字)
+;;   (cursor-y)                   ; カーソルのy座標を取得します(単位:文字)
 ;;   (cursor-off)                 ; カーソルを非表示にします
+;;   (cursor-on)                  ; カーソルを表示します
+;;   (locate 10 10)               ; カーソルを座標(x,y)に移動します(単位:文字)
 ;;   (color COL_GREEN)            ; 色を設定します
-;;   (locate 10 10)               ; カーソルを座標(x,y)に移動します
 ;;   (print "HIT ANY KEY!")       ;
 ;;   (keywait)                    ; キーボードの入力を待ちます
 ;;   (keystate)                   ; キーボードの状態を取得します(*)
 ;;   (keystate-test)              ; キーボード状態取得テスト用です(*)
-;;   (keywait2)                   ; キーボードの入力を待ちます2(タイムアウト設定可)(*)
+;;   (keywait2 3000)              ; キーボードの入力を待ちます2(タイムアウト設定可能(msec))(*)
 ;;   (keyclear)                   ; キーボードの入力をクリアします(*)
 ;;   (puttext "ABCDE" 10 10)      ; 座標(x,y)に文字列を表示します
 ;;   (putcolor 5 10 10 COL_GREEN) ; 座標(x,y)からn文字分に色を設定します(*)
@@ -50,9 +54,10 @@
   (use gauche.uvector)
   (use os.windows)
   (export
-    mscon-all-available?
-    cls cls2 screen-width screen-height cursor-on cursor-off
-    color locate keywait keystate keystate-test keywait2 keyclear
+    mscon-all-available? cls cls2 
+    screen-left screen-top screen-width screen-height
+    cursor-x cursor-y cursor-off cursor-on locate color
+    keywait keystate keystate-test keywait2 keyclear
     puttext putcolor
     COL_BLACK       COL_DARK_BLUE   COL_DARK_GREEN  COL_DARK_CYAN
     COL_DARK_RED    COL_DARK_VIOLET COL_DARK_YELLOW COL_GRAY
@@ -132,6 +137,18 @@
         (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
         (sys-set-console-cursor-position hdl 0 0)))))
 
+;; 画面の左上のx座標を取得
+(define (screen-left)
+  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
+    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
+      (slot-ref cinfo 'window.left))))
+
+;; 画面の左上のy座標を取得
+(define (screen-top)
+  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
+    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
+      (slot-ref cinfo 'window.top))))
+
 ;; 画面の幅を取得
 (define (screen-width)
   (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
@@ -148,17 +165,34 @@
             (wb (slot-ref cinfo 'window.bottom)))
         (+ (- wb wt) 1)))))
 
-;; カーソル表示
-(define (cursor-on)
+;; カーソルのx座標を取得
+(define (cursor-x)
   (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (receive (sz v) (sys-get-console-cursor-info hdl)
-      (sys-set-console-cursor-info hdl sz #t))))
+    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
+      (slot-ref cinfo 'cursor-position.x))))
+
+;; カーソルのy座標を取得
+(define (cursor-y)
+  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
+    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
+      (slot-ref cinfo 'cursor-position.y))))
 
 ;; カーソル非表示
 (define (cursor-off)
   (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
     (receive (sz v) (sys-get-console-cursor-info hdl)
       (sys-set-console-cursor-info hdl sz #f))))
+
+;; カーソル表示
+(define (cursor-on)
+  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
+    (receive (sz v) (sys-get-console-cursor-info hdl)
+      (sys-set-console-cursor-info hdl sz #t))))
+
+;; カーソル移動
+(define (locate x y)
+  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
+    (sys-set-console-cursor-position hdl x y)))
 
 ;; 色属性の取得(内部処理用)
 (define (get-color-attr fc bc)
@@ -179,76 +213,81 @@
         (cattr (get-color-attr fc bc)))
     (sys-set-console-text-attribute hdl cattr)))
 
-;; カーソル移動
-(define (locate x y)
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (sys-set-console-cursor-position hdl x y)))
-
 ;; キーボード入力待ち
 (define (keywait)
   (let ((hdl     (sys-get-std-handle STD_INPUT_HANDLE))
-        (cmode   0))
+        (cmode   0)
+        (ch      0))
     (set! cmode (sys-get-console-mode hdl))
     (sys-set-console-mode hdl 0)
-    (let1 ch (read-char)
-      (sys-set-console-mode hdl cmode)
-      ch)))
+    (set! ch (read-char))
+    (sys-set-console-mode hdl cmode)
+    ch))
 
 ;; キーボード状態取得
 (define (keystate)
   (let ((hdl     (sys-get-std-handle STD_INPUT_HANDLE))
         (cmode   0)
         (done    #f)
+        (ir      '())
+        (irlist  '())
         (retlist '()))
     (set! cmode (sys-get-console-mode hdl))
     (sys-set-console-mode hdl 0)
     (while (not done)
-      (let1 irlist (sys-peek-console-input hdl)
-        (if (null? irlist)
-          (set! done #t)
-          (let ((ir  (car irlist))
-                (evt 0))
-            (set! evt (slot-ref ir 'event-type))
-            (if (= evt KEY_EVENT)
-              (let ((kdown (if (slot-ref ir 'key.down) 1 0))
-                    (ch    (slot-ref ir 'key.unicode-char))
-                    (vk    (slot-ref ir 'key.virtual-key-code))
-                    (ctls  (slot-ref ir 'key.control-key-state))
-                    (sft   0)
-                    (ctl   0)
-                    (alt   0))
-                (if (logtest ctls SHIFT_PRESSED) (set! sft 1))
-                (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) (set! ctl 1))
-                (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) (set! alt 1))
-                ;(set! retlist (append! retlist (list (list kdown ch vk sft ctl alt))))
-                ;(set! retlist (cons (list kdown ch vk sft ctl alt) retlist)) ; 最後にリバースする必要あり
-                (push! retlist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
-                ))
-            (sys-read-console-input hdl)))))
+      (set! irlist (sys-peek-console-input hdl))
+      (if (null? irlist)
+        (set! done #t)
+        (sys-read-console-input hdl))
+      (while (not (null? irlist))
+        (set! ir     (car irlist))
+        (set! irlist (cdr irlist))
+        (let1 evt (slot-ref ir 'event-type)
+          (if (= evt KEY_EVENT)
+            (let ((kdown (if (slot-ref ir 'key.down) 1 0))
+                  (ch    (slot-ref ir 'key.unicode-char))
+                  (vk    (slot-ref ir 'key.virtual-key-code))
+                  (ctls  (slot-ref ir 'key.control-key-state))
+                  (sft   0)
+                  (ctl   0)
+                  (alt   0))
+              (if (logtest ctls SHIFT_PRESSED) (set! sft 1))
+              (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) (set! ctl 1))
+              (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) (set! alt 1))
+              ;(set! retlist (append! retlist (list (list kdown ch vk sft ctl alt))))
+              ;(set! retlist (cons (list kdown ch vk sft ctl alt) retlist)) ; 最後にリバースする必要あり
+              (push! retlist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
+              )))))
     (sys-set-console-mode hdl cmode)
     (reverse retlist)))
 
 ;; キーボード状態取得のテスト
 (define (keystate-test)
   (print "HIT ANY KEY! ([ESC] TO EXIT)")
-  (let1 done #f
+  (let ((done    #f)
+        (ks      '())
+        (kslist  '()))
     (while (not done)
-      (let1 kslist (keystate)
-        ;(print kslist)
-        (while (not (null? kslist))
-          (receive (kdown ch vk sft ctl alt) (apply values (car kslist))
-            (cond
-              ((and (= kdown 1) (= vk 27)) (set! done #t))
-              ((not (= kdown ch vk sft ctl alt 0))
-                (print " keydown=" kdown " unicode-char=" ch " virtual-key-code=" vk " shift=" sft " ctrl=" ctl " alt=" alt))))
-          (set! kslist (cdr kslist)))
-        (sys-nanosleep (* 100 1000000))))) ; 100msec
+      (set! kslist (keystate))
+      ;(print kslist)
+      (while (not (null? kslist))
+        (set! ks     (car kslist))
+        (set! kslist (cdr kslist))
+        (receive (kdown ch vk sft ctl alt) (apply values ks)
+          (cond
+            ((and (= kdown 1) (= vk 27))
+              (set! done #t)
+              (set! kslist '()))
+            ((not (= kdown ch vk sft ctl alt 0))
+              (print " keydown=" kdown " unicode-char=" ch " virtual-key-code=" vk " shift=" sft " ctrl=" ctl " alt=" alt)))))
+      (sys-nanosleep (* 100 1000000)))) ; 100msec
   (undefined))
 
 ;; キーボード入力待ち2
 (define (keywait2 :optional (timeout 0) (interval 100))
-  (let ((done      #f)
-        (ks        '())
+  (let ((done    #f)
+        (ks      '())
+        (kslist  '())
         (timecount 0)
         (interval2 interval)
         ;; [shift]と[ctrl]と[alt]は除外。Windowsキーとアプリキーも除外
@@ -257,23 +296,22 @@
                          VK_LCONTROL VK_RCONTROL VK_LMENU    VK_RMENU)))
     (if (<= interval2 0) (set! interval2 100))
     (while (not done)
-      (let1 kslist (keystate)
-        ;(print kslist)
-        (while (not (null? kslist))
-          (set! ks (car kslist))
-          (receive (kdown ch vk sft ctl alt) (apply values ks)
-            (if (and (= kdown 1) (not (find (cut = vk <>) ignorevk)))
-              (begin
-                (set! done #t)
-                (set! kslist '()))
-              (set! kslist (cdr kslist)))))
-        (when (not done)
-          (sys-nanosleep (* interval2 1000000))
-          (when (> timeout 0)
-            (set! timecount (+ timecount interval2))
-            (when (>= timecount timeout)
-              (set! done #t)
-              (set! ks '()))))))
+      (set! kslist (keystate))
+      ;(print kslist)
+      (while (not (null? kslist))
+        (set! ks     (car kslist))
+        (set! kslist (cdr kslist))
+        (receive (kdown ch vk sft ctl alt) (apply values ks)
+          (when (and (= kdown 1) (not (memv vk ignorevk)))
+            (set! done #t)
+            (set! kslist '()))))
+      (when (not done)
+        (sys-nanosleep (* interval2 1000000))
+        (when (> timeout 0)
+          (set! timecount (+ timecount interval2))
+          (when (>= timecount timeout)
+            (set! done #t)
+            (set! ks '())))))
     ks))
 
 ;; キーボード入力クリア
@@ -282,12 +320,12 @@
     (sys-flush-console-input-buffer hdl)))
 
 ;; 文字列表示
-(define (puttext str x y)
+(define (puttext str :optional (x 0) (y 0))
   (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
     (sys-write-console-output-character hdl str x y)))
 
 ;; 文字数と座標を指定して色設定
-(define (putcolor n x y :optional (fc COL_GRAY) (bc COL_BLACK))
+(define (putcolor n :optional (x 0) (y 0) (fc COL_GRAY) (bc COL_BLACK))
   (let ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
         (cattr (get-color-attr fc bc)))
     (sys-fill-console-output-attribute hdl cattr n x y)))
