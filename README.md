@@ -56,7 +56,7 @@
 
 ## 環境等
 - OS
- - Windows XP Home SP3 (32bit)
+ - Windows XP Home SP3
  - Windows 8 (64bit)
 - 言語
  - Gauche v0.9.4
