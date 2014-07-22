@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-7-21 v1.08
+;; 2014-7-22 v1.09
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -54,7 +54,7 @@
   (use gauche.uvector)
   (use os.windows)
   (export
-    mscon-all-available? cls cls2 
+    mscon-all-available? cls cls2
     screen-left screen-top screen-width screen-height
     cursor-x cursor-y cursor-off cursor-on locate color
     keywait keystate keystate-test keywait2 keyclear
@@ -238,26 +238,27 @@
       (set! irlist (sys-peek-console-input hdl))
       (if (null? irlist)
         (set! done #t)
-        (sys-read-console-input hdl))
-      (while (not (null? irlist))
-        (set! ir     (car irlist))
-        (set! irlist (cdr irlist))
-        (let1 evt (slot-ref ir 'event-type)
-          (if (= evt KEY_EVENT)
-            (let ((kdown (if (slot-ref ir 'key.down) 1 0))
-                  (ch    (slot-ref ir 'key.unicode-char))
-                  (vk    (slot-ref ir 'key.virtual-key-code))
-                  (ctls  (slot-ref ir 'key.control-key-state))
-                  (sft   0)
-                  (ctl   0)
-                  (alt   0))
-              (if (logtest ctls SHIFT_PRESSED) (set! sft 1))
-              (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) (set! ctl 1))
-              (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) (set! alt 1))
-              ;(set! retlist (append! retlist (list (list kdown ch vk sft ctl alt))))
-              ;(set! retlist (cons (list kdown ch vk sft ctl alt) retlist)) ; 最後にリバースする必要あり
-              (push! retlist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
-              )))))
+        (begin
+          (sys-read-console-input hdl)
+          (while (not (null? irlist))
+            (set! ir     (car irlist))
+            (set! irlist (cdr irlist))
+            (let1 evt (slot-ref ir 'event-type)
+              (if (= evt KEY_EVENT)
+                (let ((kdown (if (slot-ref ir 'key.down) 1 0))
+                      (ch    (slot-ref ir 'key.unicode-char))
+                      (vk    (slot-ref ir 'key.virtual-key-code))
+                      (ctls  (slot-ref ir 'key.control-key-state))
+                      (sft   0)
+                      (ctl   0)
+                      (alt   0))
+                  (if (logtest ctls SHIFT_PRESSED) (set! sft 1))
+                  (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) (set! ctl 1))
+                  (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) (set! alt 1))
+                  ;(set! retlist (append! retlist (list (list kdown ch vk sft ctl alt))))
+                  ;(set! retlist (cons (list kdown ch vk sft ctl alt) retlist)) ; 最後にリバースする必要あり
+                  (push! retlist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
+                  )))))))
     (sys-set-console-mode hdl cmode)
     (reverse retlist)))
 
