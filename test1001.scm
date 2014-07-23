@@ -7,7 +7,7 @@
 (use math.const)
 (use math.mt-random)
 
-;; 乱数
+;; 乱数((randint n1 n2)でn1からn2までの間の整数の乱数を取得(n1,n2も含む))
 (define m (make <mersenne-twister> :seed (sys-time)))
 (define (randint n1 n2)
   (+ (mt-random-integer m (+ (- n2 n1) 1)) n1))
@@ -25,11 +25,11 @@
 (define-class <hanabi> () (act tim x y rad spd divx divy col))
 
 ;; 各種初期化
-(define done     #f)              ; ループフラグ
 (define wait     100)             ; ウェイト時間(msec)
-(define wd       (screen-width))  ; 画面の幅(文字数)
-(define ht       (screen-height)) ; 画面の高さ(文字数)
+(define wd       (screen-width))  ; 画面の幅(単位:文字)
+(define ht       (screen-height)) ; 画面の高さ(単位:文字)
 (define hanalist '())             ; 花火のリスト
+(define done     #f)              ; ループフラグ
 (define sc       0)               ; カウンタ(タイミング調整用)
 
 ;; メインループ
@@ -144,7 +144,7 @@
 
   ;; キー入力のチェックとウェイト
   (if (mscon-all-available?)
-    (let1 ks (keywait2 wait wait)
+    (let1 ks (keywait2 wait)
       (when (not (null? ks))
         ;(print ks)
         (set! done #t)))
