@@ -7,7 +7,7 @@
 (use math.const)
 (use math.mt-random)
 
-;; 乱数((randint n1 n2)でn1からn2までの間の整数の乱数を取得(n1,n2も含む))
+;; 乱数((randint n1 n2)でn1とn2の間の整数の乱数を取得する(n1,n2も含む))
 (define m (make <mersenne-twister> :seed (sys-time)))
 (define (randint n1 n2)
   (+ (mt-random-integer m (+ (- n2 n1) 1)) n1))
