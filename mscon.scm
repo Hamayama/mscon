@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-7-23 v1.10
+;; 2014-7-24 v1.11
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -124,7 +124,8 @@
 ;; 画面クリア
 (define (cls)
   (sys-system "cls")
-  (undefined))
+  ;(undefined))
+  (values))
 
 ;; 画面クリア2
 (define (cls2 :optional (fc COL_GRAY) (bc COL_BLACK))
