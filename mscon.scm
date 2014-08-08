@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-8-6 v1.12
+;; 2014-8-8 v1.13
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -116,10 +116,11 @@
 (define (mscon-all-available?)
   (guard (exc
           ((<error> exc) #f))
-         (procedure? sys-fill-console-output-character)
-         (procedure? sys-fill-console-output-attribute)
-         (procedure? sys-flush-console-input-buffer)
-         #t))
+    (and
+     (procedure? sys-fill-console-output-character)
+     (procedure? sys-fill-console-output-attribute)
+     (procedure? sys-flush-console-input-buffer)
+     #t)))
 
 ;; 画面クリア
 (define (cls)
@@ -197,7 +198,7 @@
 
 ;; 色属性の取得(内部処理用)
 (define (get-color-attr fc bc)
-  (let1 cattr 0
+  (rlet1 cattr 0
     (if (logtest fc COL_BLUE_MASK)  (set! cattr (logior cattr FOREGROUND_BLUE)))
     (if (logtest fc COL_GREEN_MASK) (set! cattr (logior cattr FOREGROUND_GREEN)))
     (if (logtest fc COL_RED_MASK)   (set! cattr (logior cattr FOREGROUND_RED)))
@@ -205,8 +206,7 @@
     (if (logtest bc COL_BLUE_MASK)  (set! cattr (logior cattr BACKGROUND_BLUE)))
     (if (logtest bc COL_GREEN_MASK) (set! cattr (logior cattr BACKGROUND_GREEN)))
     (if (logtest bc COL_RED_MASK)   (set! cattr (logior cattr BACKGROUND_RED)))
-    (if (logtest bc COL_INTENSITY)  (set! cattr (logior cattr BACKGROUND_INTENSITY)))
-    cattr))
+    (if (logtest bc COL_INTENSITY)  (set! cattr (logior cattr BACKGROUND_INTENSITY)))))
 
 ;; 色設定
 (define (color :optional (fc COL_GRAY) (bc COL_BLACK))
