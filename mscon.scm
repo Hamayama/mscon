@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-8-8 v1.13
+;; 2014-8-9 v1.14
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -130,54 +130,54 @@
 
 ;; 画面クリア2
 (define (cls2 :optional (fc COL_GRAY) (bc COL_BLACK))
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
-      (let ((bw (slot-ref cinfo 'size.x))
-            (bh (slot-ref cinfo 'size.y))
-            (cattr (get-color-attr fc bc)))
-        (sys-fill-console-output-attribute hdl cattr   (* bw bh) 0 0)
-        (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
-        (sys-set-console-cursor-position hdl 0 0)))))
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (let ((bw (slot-ref cinfo 'size.x))
+          (bh (slot-ref cinfo 'size.y))
+          (cattr (get-color-attr fc bc)))
+      (sys-fill-console-output-attribute hdl cattr   (* bw bh) 0 0)
+      (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
+      (sys-set-console-cursor-position hdl 0 0))))
 
 ;; 画面の左上のx座標を取得
 (define (screen-left)
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
-      (slot-ref cinfo 'window.left))))
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (slot-ref cinfo 'window.left)))
 
 ;; 画面の左上のy座標を取得
 (define (screen-top)
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
-      (slot-ref cinfo 'window.top))))
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (slot-ref cinfo 'window.top)))
 
 ;; 画面の幅を取得
 (define (screen-width)
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
-      (let ((wl (slot-ref cinfo 'window.left))
-            (wr (slot-ref cinfo 'window.right)))
-        (+ (- wr wl) 1)))))
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (let ((wl (slot-ref cinfo 'window.left))
+          (wr (slot-ref cinfo 'window.right)))
+      (+ (- wr wl) 1))))
 
 ;; 画面の高さを取得
 (define (screen-height)
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
-      (let ((wt (slot-ref cinfo 'window.top))
-            (wb (slot-ref cinfo 'window.bottom)))
-        (+ (- wb wt) 1)))))
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (let ((wt (slot-ref cinfo 'window.top))
+          (wb (slot-ref cinfo 'window.bottom)))
+      (+ (- wb wt) 1))))
 
 ;; カーソルのx座標を取得
 (define (cursor-x)
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
-      (slot-ref cinfo 'cursor-position.x))))
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (slot-ref cinfo 'cursor-position.x)))
 
 ;; カーソルのy座標を取得
 (define (cursor-y)
-  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (let1 cinfo (sys-get-console-screen-buffer-info hdl)
-      (slot-ref cinfo 'cursor-position.y))))
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (slot-ref cinfo 'cursor-position.y)))
 
 ;; カーソル非表示
 (define (cursor-off)
