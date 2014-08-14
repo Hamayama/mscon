@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-8-9 v1.14
+;; 2014-8-14 v1.15
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -280,7 +280,7 @@
            ((and (= kdown 1) (= vk 27))
             (set! done #t)
             (set! kslist '()))
-           ((not (= kdown ch vk sft ctl alt 0))
+           (else
             (print " keydown=" kdown " unicode-char=" ch " virtual-key-code=" vk " shift=" sft " ctrl=" ctl " alt=" alt)))))
       (sys-nanosleep (* 100 1000000)))) ; 100msec
   (undefined))
