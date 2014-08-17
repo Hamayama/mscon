@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-8-14 v1.15
+;; 2014-8-17 v1.16
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -119,8 +119,7 @@
     (and
      (procedure? sys-fill-console-output-character)
      (procedure? sys-fill-console-output-attribute)
-     (procedure? sys-flush-console-input-buffer)
-     #t)))
+     (procedure? sys-flush-console-input-buffer))))
 
 ;; 画面クリア
 (define (cls)
@@ -296,8 +295,7 @@
                          VK_RWIN     VK_APPS     VK_LSHIFT   VK_RSHIFT
                          VK_LCONTROL VK_RCONTROL VK_LMENU    VK_RMENU)))
     (if (<= interval 0) (set! interval 100))
-    (if (and (> timeout 0) (< timeout interval))
-      (set! interval timeout))
+    (if (and (> timeout 0) (< timeout interval)) (set! interval timeout))
     (while (not done)
       (set! kslist (keystate))
       ;(print kslist)
