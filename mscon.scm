@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-8-17 v1.16
+;; 2014-9-12 v1.17
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -15,6 +15,10 @@
 ;;   (use mscon)                  ; モジュールをロードします
 ;;   (cls)                        ; 画面をクリアします(コマンドのため遅い)
 ;;   (cls2)                       ; 画面をクリアします2(*)
+;;   (screen-size 80 25)          ; 画面のバッファのサイズ(w,h)を設定します(単位:文字)(*2)
+;;                                ;   (ウィンドウサイズより小さくは設定できません)
+;;   (screen-area 0 0 79 24)      ; 画面の表示エリア(x1,y1,x2,y2)を設定します(単位:文字)
+;;                                ;   (画面のバッファを越える値は設定できません)
 ;;   (screen-left)                ; 画面の左上のx座標を取得します(単位:文字)
 ;;   (screen-top)                 ; 画面の左上のy座標を取得します(単位:文字)
 ;;   (screen-width)               ; 画面の幅を取得します(単位:文字)
@@ -24,6 +28,7 @@
 ;;   (cursor-off)                 ; カーソルを非表示にします
 ;;   (cursor-on)                  ; カーソルを表示します
 ;;   (locate 10 10)               ; カーソルを座標(x,y)に移動します(単位:文字)
+;;                                ;   (画面のバッファを越える値は設定できません)
 ;;   (color COL_GREEN)            ; 色を設定します
 ;;   (print "HIT ANY KEY!")       ;
 ;;   (keywait)                    ; キーボードの入力を待ちます
@@ -36,6 +41,7 @@
 ;;
 ;;   (*)マークがある命令は Gauche v0.9.3.3 では使用できません。
 ;;      使用可能かどうかは (mscon-all-available?) でチェックできます。
+;;   (*2)マークがある命令は現状の Gauche では使用できません。
 ;;
 ;; ＜注意事項＞
 ;;   (1)writeやdisplayが、指定したカーソル位置に表示しない。
@@ -54,7 +60,7 @@
   (use gauche.uvector)
   (use os.windows)
   (export
-    mscon-all-available? cls cls2
+    mscon-all-available? cls cls2 screen-size screen-area
     screen-left screen-top screen-width screen-height
     cursor-x cursor-y cursor-off cursor-on locate color
     keywait keystate keystate-test keywait2 keyclear
@@ -137,6 +143,16 @@
       (sys-fill-console-output-attribute hdl cattr   (* bw bh) 0 0)
       (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
       (sys-set-console-cursor-position hdl 0 0))))
+
+;; 画面のバッファのサイズを設定
+(define (screen-size x y)
+  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
+    (sys-set-screen-buffer-size hdl x y)))
+
+;; 画面の表示エリアを設定
+(define (screen-area x1 y1 x2 y2)
+  (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
+    (sys-set-console-window-info hdl #t (s16vector x1 y1 x2 y2))))
 
 ;; 画面の左上のx座標を取得
 (define (screen-left)

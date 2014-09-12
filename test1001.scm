@@ -33,8 +33,13 @@
 (define done     #f)              ; ループフラグ
 (define sc       0)               ; カウンタ(タイミング調整用)
 
-;; メインループ
+(guard (exc
+        ((<system-error> exc) #f))
+  (screen-size wd ht))
+(screen-area 0 0 (- wd 1) (- ht 1))
 (if (mscon-all-available?) (keyclear))
+
+;; メインループ
 (while (not done)
   (if (mscon-all-available?) (cls2) (cls))
   (color COL_YELLOW)
