@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-9-12 v1.17
+;; 2014-9-13 v1.18
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -145,9 +145,9 @@
       (sys-set-console-cursor-position hdl 0 0))))
 
 ;; 画面のバッファのサイズを設定
-(define (screen-size x y)
+(define (screen-size w h)
   (let1 hdl (sys-get-std-handle STD_OUTPUT_HANDLE)
-    (sys-set-screen-buffer-size hdl x y)))
+    (sys-set-screen-buffer-size hdl w h)))
 
 ;; 画面の表示エリアを設定
 (define (screen-area x1 y1 x2 y2)
