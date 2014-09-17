@@ -26,20 +26,26 @@
 (define-class <hanabi> () (act tim x y rad spd divx divy col))
 
 ;; 各種初期化
-(define wait     100)             ; ウェイト時間(msec)
-(define wd       (screen-width))  ; 画面の幅(単位:文字)
-(define ht       (screen-height)) ; 画面の高さ(単位:文字)
-(define hanalist '())             ; 花火のリスト
-(define done     #f)              ; ループフラグ
-(define sc       0)               ; カウンタ(タイミング調整用)
+(define wait     100)                    ; ウェイト時間(msec)
+(define wd       80)                     ; 画面の幅(単位:文字)
+(define ht       25)                     ; 画面の高さ(単位:文字)
+(define wd_buf   (screen-buffer-width))  ; 画面のバッファの幅(保存用)
+(define ht_buf   (screen-buffer-height)) ; 画面のバッファの高さ(保存用)
+(define wd2      (screen-width))         ; 画面の幅(保存用)
+(define ht2      (screen-height))        ; 画面の高さ(保存用)
+(define hanalist '())                    ; 花火のリスト
+(define done     #f)                     ; ループフラグ
+(define sc       0)                      ; カウンタ(タイミング調整用)
 
-(guard (exc
-        ((<system-error> exc) #f))
-  (screen-size wd ht))
+;; 画面サイズ設定
+(guard (exc ((<system-error> exc) #f))
+  (screen-size (max wd wd_buf) (max ht ht_buf)))
 (screen-area 0 0 (- wd 1) (- ht 1))
-(if (mscon-all-available?) (keyclear))
+(guard (exc ((<system-error> exc) #f))
+  (screen-size wd ht))
 
 ;; メインループ
+(if (mscon-all-available?) (keyclear))
 (while (not done)
   (if (mscon-all-available?) (cls2) (cls))
   (color COL_YELLOW)
@@ -56,8 +62,8 @@
   (if (and (= (modulo sc 2) 0) (<= (randint 1 6) 3))
     (let1 hb (make <hanabi>)
       (slot-set! hb 'act  1)
-      (slot-set! hb 'tim  (randint 4 8))
-      (slot-set! hb 'x    (randint 5 (- wd 5 1)))
+      (slot-set! hb 'tim  (randint (quotient ht 6) (+ (quotient ht 3) (max 0 (- ht 30)))))
+      (slot-set! hb 'x    (randint 10 (- wd 10 1)))
       (slot-set! hb 'y    (- ht 1))
       (slot-set! hb 'rad  (- pi/2))
       (slot-set! hb 'spd  5)
@@ -92,9 +98,6 @@
          (slot-set! hb 'y   y)
          (slot-set! hb 'spd spd)
          (slot-set! hb 'tim tim)
-         (when (or (< x 0) (>= x wd) (< y 0) (>= y ht))
-           (set! act 0)
-           (slot-set! hb 'act 0))
          (when (<= tim 0)
            (if (= act 1)
              ;; 爆発
@@ -127,16 +130,17 @@
        (when (> act 0)
          (set! x (x->integer (floor x)))
          (set! y (x->integer (floor y)))
-         (if (mscon-all-available?)
-           (begin
-             (putcolor 2 x y col)
-             (puttext "★" x y))
-           (begin
-             ;(color 15)
-             ;(locate x y)
-             ;(display "*")
-             ;(flush)
-             (puttext "*" x y))))))
+         (if (and (>= x 0) (< x wd) (>= y 0) (< y ht))
+           (if (mscon-all-available?)
+             (begin
+               (putcolor 2 x y col)
+               (puttext "★" x y))
+             (begin
+               ;(color 15)
+               ;(locate x y)
+               ;(display "*")
+               ;(flush)
+               (puttext "*" x y)))))))
    hanalist)
 
   ;; 花火の消去
@@ -156,4 +160,12 @@
         (set! done #t)))
     (sys-nanosleep (* wait 1000000)))
   )
+
+;; 終了
+;; 画面サイズ設定(元のサイズに戻す)
+(guard (exc ((<system-error> exc) #f))
+  (screen-size (max wd wd2 wd_buf) (max ht ht2 ht_buf)))
+(screen-area 0 0 (- wd2 1) (- ht2 1))
+(guard (exc ((<system-error> exc) #f))
+  (screen-size wd_buf ht_buf))
 

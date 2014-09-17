@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-9-13 v1.18
+;; 2014-9-17 v1.19
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -19,10 +19,13 @@
 ;;                                ;   (ウィンドウサイズより小さくは設定できません)
 ;;   (screen-area 0 0 79 24)      ; 画面の表示エリア(x1,y1,x2,y2)を設定します(単位:文字)
 ;;                                ;   (画面のバッファを越える値は設定できません)
+;;                                ;   (ディスプレイに入りきらない値は設定できません)
 ;;   (screen-left)                ; 画面の左上のx座標を取得します(単位:文字)
 ;;   (screen-top)                 ; 画面の左上のy座標を取得します(単位:文字)
 ;;   (screen-width)               ; 画面の幅を取得します(単位:文字)
 ;;   (screen-height)              ; 画面の高さを取得します(単位:文字)
+;;   (screen-buffer-width)        ; 画面のバッファの幅を取得します(単位:文字)
+;;   (screen-buffer-height)       ; 画面のバッファの高さを取得します(単位:文字)
 ;;   (cursor-x)                   ; カーソルのx座標を取得します(単位:文字)
 ;;   (cursor-y)                   ; カーソルのy座標を取得します(単位:文字)
 ;;   (cursor-off)                 ; カーソルを非表示にします
@@ -30,6 +33,7 @@
 ;;   (locate 10 10)               ; カーソルを座標(x,y)に移動します(単位:文字)
 ;;                                ;   (画面のバッファを越える値は設定できません)
 ;;   (color COL_GREEN)            ; 色を設定します
+;;                                ;   (設定可能な色の定数はソースコード参照)
 ;;   (print "HIT ANY KEY!")       ;
 ;;   (keywait)                    ; キーボードの入力を待ちます
 ;;   (keystate)                   ; キーボードの状態を取得します(*)
@@ -37,11 +41,14 @@
 ;;   (keywait2 3000)              ; キーボードの入力を待ちます2(タイムアウト設定可能(msec))(*)
 ;;   (keyclear)                   ; キーボードの入力をクリアします(*)
 ;;   (puttext "ABCDE" 10 10)      ; 座標(x,y)に文字列を表示します
+;;                                ;   (引数の順番は、文字列 x y の順です)
 ;;   (putcolor 5 10 10 COL_GREEN) ; 座標(x,y)からn文字分に色を設定します(*)
+;;                                ;   (引数の順番は、文字数 x y 色 の順です)
 ;;
 ;;   (*)マークがある命令は Gauche v0.9.3.3 では使用できません。
 ;;      使用可能かどうかは (mscon-all-available?) でチェックできます。
 ;;   (*2)マークがある命令は現状の Gauche では使用できません。
+;;      (Gaucheの開発最新版では使用可能です)
 ;;
 ;; ＜注意事項＞
 ;;   (1)writeやdisplayが、指定したカーソル位置に表示しない。
@@ -62,6 +69,7 @@
   (export
     mscon-all-available? cls cls2 screen-size screen-area
     screen-left screen-top screen-width screen-height
+    screen-buffer-width screen-buffer-height
     cursor-x cursor-y cursor-off cursor-on locate color
     keywait keystate keystate-test keywait2 keyclear
     puttext putcolor
@@ -181,6 +189,18 @@
     (let ((wt (slot-ref cinfo 'window.top))
           (wb (slot-ref cinfo 'window.bottom)))
       (+ (- wb wt) 1))))
+
+;; 画面のバッファの幅を取得
+(define (screen-buffer-width)
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (slot-ref cinfo 'size.x)))
+
+;; 画面のバッファの高さを取得
+(define (screen-buffer-height)
+  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl)))
+    (slot-ref cinfo 'size.y)))
 
 ;; カーソルのx座標を取得
 (define (cursor-x)
