@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-9-17 v1.19
+;; 2014-9-23 v1.20
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -15,7 +15,7 @@
 ;;   (use mscon)                  ; モジュールをロードします
 ;;   (cls)                        ; 画面をクリアします(コマンドのため遅い)
 ;;   (cls2)                       ; 画面をクリアします2(*)
-;;   (screen-size 80 25)          ; 画面のバッファのサイズ(w,h)を設定します(単位:文字)(*2)
+;;   (screen-size 80 300)         ; 画面のバッファのサイズ(w,h)を設定します(単位:文字)(*2)
 ;;                                ;   (ウィンドウサイズより小さくは設定できません)
 ;;   (screen-area 0 0 79 24)      ; 画面の表示エリア(x1,y1,x2,y2)を設定します(単位:文字)
 ;;                                ;   (画面のバッファを越える値は設定できません)
@@ -30,7 +30,7 @@
 ;;   (cursor-y)                   ; カーソルのy座標を取得します(単位:文字)
 ;;   (cursor-off)                 ; カーソルを非表示にします
 ;;   (cursor-on)                  ; カーソルを表示します
-;;   (locate 10 10)               ; カーソルを座標(x,y)に移動します(単位:文字)
+;;   (locate 10 40)               ; カーソルを座標(x,y)に移動します(単位:文字)
 ;;                                ;   (画面のバッファを越える値は設定できません)
 ;;   (color COL_GREEN)            ; 色を設定します
 ;;                                ;   (設定可能な色の定数はソースコード参照)
@@ -128,8 +128,7 @@
 
 ;; 全機能利用可能か
 (define (mscon-all-available?)
-  (guard (exc
-          ((<error> exc) #f))
+  (guard (exc ((<error> exc) #f))
     (and
      (procedure? sys-fill-console-output-character)
      (procedure? sys-fill-console-output-attribute)
@@ -143,14 +142,14 @@
 
 ;; 画面クリア2
 (define (cls2 :optional (fc COL_GRAY) (bc COL_BLACK))
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
-         (cinfo (sys-get-console-screen-buffer-info hdl)))
-    (let ((bw (slot-ref cinfo 'size.x))
-          (bh (slot-ref cinfo 'size.y))
-          (cattr (get-color-attr fc bc)))
-      (sys-fill-console-output-attribute hdl cattr   (* bw bh) 0 0)
-      (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
-      (sys-set-console-cursor-position hdl 0 0))))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl))
+         (bw    (slot-ref cinfo 'size.x))
+         (bh    (slot-ref cinfo 'size.y))
+         (cattr (get-color-attr fc bc)))
+    (sys-fill-console-output-attribute hdl cattr   (* bw bh) 0 0)
+    (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
+    (sys-set-console-cursor-position hdl 0 0)))
 
 ;; 画面のバッファのサイズを設定
 (define (screen-size w h)
@@ -164,53 +163,53 @@
 
 ;; 画面の左上のx座標を取得
 (define (screen-left)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
          (cinfo (sys-get-console-screen-buffer-info hdl)))
     (slot-ref cinfo 'window.left)))
 
 ;; 画面の左上のy座標を取得
 (define (screen-top)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
          (cinfo (sys-get-console-screen-buffer-info hdl)))
     (slot-ref cinfo 'window.top)))
 
 ;; 画面の幅を取得
 (define (screen-width)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
-         (cinfo (sys-get-console-screen-buffer-info hdl)))
-    (let ((wl (slot-ref cinfo 'window.left))
-          (wr (slot-ref cinfo 'window.right)))
-      (+ (- wr wl) 1))))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl))
+         (wl    (slot-ref cinfo 'window.left))
+         (wr    (slot-ref cinfo 'window.right)))
+    (+ (- wr wl) 1)))
 
 ;; 画面の高さを取得
 (define (screen-height)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
-         (cinfo (sys-get-console-screen-buffer-info hdl)))
-    (let ((wt (slot-ref cinfo 'window.top))
-          (wb (slot-ref cinfo 'window.bottom)))
-      (+ (- wb wt) 1))))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
+         (cinfo (sys-get-console-screen-buffer-info hdl))
+         (wt    (slot-ref cinfo 'window.top))
+         (wb    (slot-ref cinfo 'window.bottom)))
+    (+ (- wb wt) 1)))
 
 ;; 画面のバッファの幅を取得
 (define (screen-buffer-width)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
          (cinfo (sys-get-console-screen-buffer-info hdl)))
     (slot-ref cinfo 'size.x)))
 
 ;; 画面のバッファの高さを取得
 (define (screen-buffer-height)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
          (cinfo (sys-get-console-screen-buffer-info hdl)))
     (slot-ref cinfo 'size.y)))
 
 ;; カーソルのx座標を取得
 (define (cursor-x)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
          (cinfo (sys-get-console-screen-buffer-info hdl)))
     (slot-ref cinfo 'cursor-position.x)))
 
 ;; カーソルのy座標を取得
 (define (cursor-y)
-  (let* ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
+  (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
          (cinfo (sys-get-console-screen-buffer-info hdl)))
     (slot-ref cinfo 'cursor-position.y)))
 
@@ -245,8 +244,8 @@
 
 ;; 色設定
 (define (color :optional (fc COL_GRAY) (bc COL_BLACK))
-  (let ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
-        (cattr (get-color-attr fc bc)))
+  (let ((hdl     (sys-get-std-handle STD_OUTPUT_HANDLE))
+        (cattr   (get-color-attr fc bc)))
     (sys-set-console-text-attribute hdl cattr)))
 
 ;; キーボード入力待ち
@@ -281,16 +280,13 @@
             (set! irlist (cdr irlist))
             (let1 evt (slot-ref ir 'event-type)
               (if (= evt KEY_EVENT)
-                (let ((kdown (if (slot-ref ir 'key.down) 1 0))
-                      (ch    (slot-ref ir 'key.unicode-char))
-                      (vk    (slot-ref ir 'key.virtual-key-code))
-                      (ctls  (slot-ref ir 'key.control-key-state))
-                      (sft   0)
-                      (ctl   0)
-                      (alt   0))
-                  (if (logtest ctls SHIFT_PRESSED) (set! sft 1))
-                  (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) (set! ctl 1))
-                  (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) (set! alt 1))
+                (let* ((kdown (if (slot-ref ir 'key.down) 1 0))
+                       (ch    (slot-ref ir 'key.unicode-char))
+                       (vk    (slot-ref ir 'key.virtual-key-code))
+                       (ctls  (slot-ref ir 'key.control-key-state))
+                       (sft   (if (logtest ctls SHIFT_PRESSED) 1 0))
+                       (ctl   (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) 1 0))
+                       (alt   (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) 1 0)))
                   ;(set! retlist (append! retlist (list (list kdown ch vk sft ctl alt))))
                   ;(set! retlist (cons (list kdown ch vk sft ctl alt) retlist)) ; 最後にリバースする必要あり
                   (push! retlist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
@@ -363,7 +359,7 @@
 
 ;; 文字数と座標を指定して色設定
 (define (putcolor n :optional (x 0) (y 0) (fc COL_GRAY) (bc COL_BLACK))
-  (let ((hdl (sys-get-std-handle STD_OUTPUT_HANDLE))
-        (cattr (get-color-attr fc bc)))
+  (let ((hdl     (sys-get-std-handle STD_OUTPUT_HANDLE))
+        (cattr   (get-color-attr fc bc)))
     (sys-fill-console-output-attribute hdl cattr n x y)))
 
