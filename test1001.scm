@@ -3,6 +3,7 @@
 ;; Windowsコンソールで花火の表示 (msconモジュールのテスト用)
 ;;
 (add-load-path "." :relative)
+(display #\cr)(flush) ; gosh-noconsoleでも動くようにコンソールを生成
 (use mscon)
 (use math.const)
 (use math.mt-random)
