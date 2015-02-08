@@ -68,13 +68,12 @@
 
 
 ## 環境等
-- 以下の環境で動作を確認しました。
-  - OS
-    - Windows XP Home SP3
-    - Windows 8 (64bit)
-  - 言語
-    - Gauche v0.9.4
-    - Gauche v0.9.3.3
+- OS
+  - Windows XP Home SP3
+  - Windows 8 (64bit)
+- 言語
+  - Gauche v0.9.4
+  - Gauche v0.9.3.3
 
 ## 履歴
 - 2014-6-22  v1.00 (初版)
@@ -103,4 +102,4 @@
 - 2014-11-26 v1.21 コメント修正のみ
 
 
-(2014-11-26)
+(2015-2-8)
