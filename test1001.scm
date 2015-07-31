@@ -10,9 +10,9 @@
 
 ;; 乱数
 ;;   (randint n1 n2)でn1以上n2以下の整数の乱数を取得する(n1,n2は整数でn1<n2であること)
-(define m (make <mersenne-twister> :seed (sys-time)))
-(define (randint n1 n2)
-  (+ (mt-random-integer m (+ (- n2 n1) 1)) n1))
+(define randint
+  (let1 m (make <mersenne-twister> :seed (sys-time))
+    (lambda (n1 n2) (+ (mt-random-integer m (+ (- n2 n1) 1)) n1))))
 
 ;; 花火情報
 ;;   act   行動モード(=0:なし,=1:上昇中,=2:爆発後)
@@ -40,9 +40,8 @@
 
 ;; 画面サイズ設定
 (guard (exc ((<system-error> exc) #f))
-  (screen-size (max wd wd_buf) (max ht ht_buf)))
-(screen-area 0 0 (- wd 1) (- ht 1))
-(guard (exc ((<system-error> exc) #f))
+  (screen-size (max wd wd_buf) (max ht ht_buf))
+  (screen-area 0 0 (- wd 1) (- ht 1))
   (screen-size wd ht))
 
 ;; メインループ
@@ -165,8 +164,7 @@
 ;; 終了
 ;; 画面サイズ設定(元のサイズに戻す)
 (guard (exc ((<system-error> exc) #f))
-  (screen-size (max wd wd2 wd_buf) (max ht ht2 ht_buf)))
-(screen-area 0 0 (- wd2 1) (- ht2 1))
-(guard (exc ((<system-error> exc) #f))
+  (screen-size (max wd wd2 wd_buf) (max ht ht2 ht_buf))
+  (screen-area 0 0 (- wd2 1) (- ht2 1))
   (screen-size wd_buf ht_buf))
 
