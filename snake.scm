@@ -118,6 +118,8 @@
     (cond [(not (mscon-all-available?))
            (exit 1 "This program requires Gauche v0.9.4 or later.")]
           [else
+           (guard (ex ((<error> ex) #f))
+             (set-console-title "snake"))
            (game #f)])]
    [else
     (cond [(not (and (sys-isatty (current-input-port))
@@ -140,13 +142,13 @@
 (define (snake-tail snake) (cdr (snake-body snake)))
 
 (define (game con)
-  (set! *waitnow* *wait*)
   (hide-cursor con)
   (clear-screen con)
   (random-source-randomize! default-random-source)
   (receive (row col) (query-screen-size con)
     (let* ([field (new-field row col)]
            [snake (new-snake field)])
+      (set! *waitnow* *wait*)
       (set-character-attribute con '(cyan blue))
       (render-field con field)
       (run-game con field snake (new-food field snake) 0))))
@@ -180,9 +182,8 @@
       (if (or (collide-wall? field (car t) (cdr t))
               (collide-wall? field (car h) (cdr h)))
         (new-snake field)
-        ;`(,dir ,h ,t)
-        `(,dir ,h ,t ,t)
-        ))))
+        ;`(,dir ,h ,t)))))
+        `(,dir ,h ,t ,t)))))
 
 (define (update-snake snake dir new-head extend?)
   `(,dir ,new-head
@@ -240,6 +241,7 @@
 
 (define (get-dir con) ;returns W, S, N, E or #f
   (and (chready? con)
+       ;(case (getch con) [(#\h) 'W] [(#\j) 'S] [(#\k) 'N] [(#\l) 'E] [else #f])))
        (case (getch con) [(#\h #\x11) 'W] [(#\j #\x14) 'S] [(#\k #\x12) 'N] [(#\l #\x13) 'E] [else #f])))
 
 (define (render con field snake food)
@@ -263,6 +265,7 @@
 (define (render-snake con snake)
   ;(render-point con (snake-head snake) #\@)
   ;(dolist [pt (snake-tail snake)]
+  ;  (render-point con pt #\*)))
   (dolist [pt (drop-right (snake-tail snake) 1)]
     (render-point con pt #\*))
   (render-point con (last (snake-tail snake)) #\space)

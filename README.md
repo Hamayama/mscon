@@ -46,6 +46,8 @@
                                ;   (引数の順番は、文字列 x y の順です)
   (putcolor 5 10 10 COL_GREEN) ; 座標(x,y)からn文字分に色を設定します(*)
                                ;   (引数の順番は、文字数 x y 色 の順です)
+  (set-console-title "test")   ; コンソールのタイトルを設定します(*2)
+  (get-console-title)          ; コンソールのタイトルを取得します
 
   (*)マークがある命令は Gauche v0.9.3.3 では使用できません。
      使用可能かどうかは (mscon-all-available?) でチェックできます。
@@ -100,6 +102,7 @@
 - 2014-9-17  v1.19 コマンド追加(screen-buffer-width,screen-buffer-height)
 - 2014-9-23  v1.20 一部処理見直し
 - 2014-11-26 v1.21 コメント修正のみ
+- 2015-7-31  v1.22 コマンド追加(set-console-title,get-console-title)
 
 
-(2015-2-8)
+(2015-7-31)

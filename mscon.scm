@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2014-11-26 v1.21
+;; 2015-7-31 v1.22
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -19,7 +19,7 @@
     screen-buffer-width screen-buffer-height
     cursor-x cursor-y cursor-off cursor-on locate color
     keywait keystate keystate-test keywait2 keyclear
-    puttext putcolor
+    puttext putcolor set-console-title get-console-title
     COL_BLACK       COL_DARK_BLUE   COL_DARK_GREEN  COL_DARK_CYAN
     COL_DARK_RED    COL_DARK_VIOLET COL_DARK_YELLOW COL_GRAY
     COL_DARK_GRAY   COL_BLUE        COL_GREEN       COL_CYAN
@@ -309,4 +309,12 @@
   (let ((hdl     (sys-get-std-handle STD_OUTPUT_HANDLE))
         (cattr   (get-color-attr fc bc)))
     (sys-fill-console-output-attribute hdl cattr n x y)))
+
+;; タイトル設定
+(define (set-console-title str)
+  (sys-set-console-title str))
+
+;; タイトル取得
+(define (get-console-title)
+  (sys-get-console-title))
 
