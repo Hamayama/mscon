@@ -1,0 +1,2 @@
+gosh snake.scm
+pause
