@@ -176,12 +176,13 @@
   (move-cursor-to con 0 0)) ; for scroll recovery
 
 (define (render-snake con snake)
-  (render-point con (snake-head snake) #\@)
+  ;(render-point con (snake-head snake) #\@)
   ;(dolist [pt (snake-tail snake)]
   ;  (render-point con pt #\*)))
   (dolist [pt (drop-right (snake-tail snake) 1)]
     (render-point con pt #\*))
-  (render-point con (last (snake-tail snake)) #\space))
+  (render-point con (last (snake-tail snake)) #\space)
+  (render-point con (snake-head snake) #\@))
 
 (define (render-point con pt ch)
   (match-let1 (x . y) pt
