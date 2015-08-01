@@ -16,99 +16,13 @@
 (use srfi-27)
 (cond-expand
  [gauche.os.windows
-  (use mscon)]
+  (use mscon)
+  (use mscontext)]
  [else
   (use text.console)])
 
-
-;; compatible layer of text.console
-(cond-expand
- [gauche.os.windows
-  (define *keybuf* '())
-  (define *cx* 0)
-  (define *cy* 0)
-  (define *fc* COL_WHITE)
-  (define *bc* COL_BLACK)
-
-  (define (hide-cursor con)
-    ;(cursor-off)
-    )
-  (define (clear-screen con)
-    (cls2)
-    )
-  (define (query-screen-size con)
-    (values (screen-height) (screen-width))
-    )
-  (define (%getch-sub)
-    (let ((done    #f)
-          (ks      '())
-          (kslist  '()))
-      (set! kslist (keystate))
-      (while (not (null? kslist))
-        (set! ks     (car kslist))
-        (set! kslist (cdr kslist))
-        (receive (kdown ch vk sft ctl alt) (apply values ks)
-          (if (= kdown 1)
-            (if (= ch 0)
-              (push! *keybuf* (case vk
-                               ((37) 17) ; left
-                               ((38) 18) ; up
-                               ((39) 19) ; right
-                               ((40) 20) ; down
-                               (else  0)))
-              (push! *keybuf* ch)))
-          ))))
-  (define (chready? con)
-    (%getch-sub)
-    ;(print *keybuf*)
-    (if (> (length *keybuf*) 0) #t #f))
-  (define (getch con)
-    (while (<= (length *keybuf*) 0)
-      (sys-nanosleep #e100e6) ; 100msec
-      (%getch-sub))
-    (integer->char (pop! *keybuf*)))
-  (define (move-cursor-to con y x)
-    ;(locate x y))
-    (set! *cx* x)
-    (set! *cy* y)
-    )
-  (define (putch con ch)
-    ;(display ch)
-    ;(flush)
-    (putcolor 1 *cx* *cy* *fc* *bc*)
-    (puttext (string ch) *cx* *cy*)
-    )
-  (define (putstr con str)
-    ;(display str)
-    ;(flush)
-    (putcolor (string-length str) *cx* *cy* *fc* *bc*)
-    (puttext str *cx* *cy*)
-    )
-  (define (set-character-attribute con color-list)
-    (define (get-color-code color)
-      (case color
-        ((black)      COL_BLACK)
-        ((red)        COL_RED)
-        ((green)      COL_GREEN)
-        ((yellow)     COL_YELLOW)
-        ((blue)       COL_BLUE)
-        ((magenta)    COL_VIOLET)
-        ((cyan)       COL_CYAN)
-        ((white)      COL_WHITE)
-        (else         COL_BLACK)
-        ))
-    (let ((c1 (list-ref color-list 0 #f))
-          (c2 (list-ref color-list 1 #f))
-          (a1 (list-ref color-list 2 #f)))
-      ;(color (get-color-code c1) (get-color-code c2))
-      (set! *fc* (get-color-code c1))
-      (set! *bc* (get-color-code c2))
-      ))
-  ])
-
-
 (define *wait*    #e100e6) ; 100msec
-(define *waitmin*  #e20e6) ;  20msec
+(define *waitmin* #e20e6)  ;  20msec
 (define *waitnow* 0)
 
 (define (main args)
@@ -118,9 +32,7 @@
     (cond [(not (mscon-all-available?))
            (exit 1 "This program requires Gauche v0.9.4 or later.")]
           [else
-           (guard (ex ((<error> ex) #f))
-             (set-console-title "snake"))
-           (game #f)])]
+           (call-with-console (make <vt100>) game)])]
    [else
     (cond [(not (and (sys-isatty (current-input-port))
                      (sys-isatty (current-output-port))))
@@ -260,17 +172,16 @@
      (^[y x]
        (when (array-ref field y x)
          (move-cursor-to con y x)
-         (putch con #\#)))))
+         (putch con #\#))))
+  (move-cursor-to con 0 0)) ; for scroll recovery
 
 (define (render-snake con snake)
-  ;(render-point con (snake-head snake) #\@)
+  (render-point con (snake-head snake) #\@)
   ;(dolist [pt (snake-tail snake)]
   ;  (render-point con pt #\*)))
   (dolist [pt (drop-right (snake-tail snake) 1)]
     (render-point con pt #\*))
-  (render-point con (last (snake-tail snake)) #\space)
-  (render-point con (snake-head snake) #\@)
-  )
+  (render-point con (last (snake-tail snake)) #\space))
 
 (define (render-point con pt ch)
   (match-let1 (x . y) pt
