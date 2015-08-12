@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-8-1 v1.00
+;; 2015-8-13 v1.01
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -71,25 +71,20 @@
 (define-method putstr ((con <vt100>) s)
   (display s (~ con'oport)) (flush (~ con'oport)))
 (define (%getch-sub con)
-  (let ((done   #f)
-        (ks     '())
-        (kslist '()))
-    (set! kslist (keystate))
-    (while (not (null? kslist))
-      (set! ks     (car kslist))
-      (set! kslist (cdr kslist))
-      (receive (kdown ch vk sft ctl alt) (apply values ks)
-        (if (= kdown 1)
-          (if (= ch 0)
-            (push! (~ con 'keybuf) (case vk
-                                     ;; temporary support of cursor keys
-                                     ((37) 17) ; left
-                                     ((38) 18) ; up
-                                     ((39) 19) ; right
-                                     ((40) 20) ; down
-                                     (else  0)))
-            (push! (~ con 'keybuf) ch)))
-        ))))
+  (for-each
+   (lambda (ks)
+     (receive (kdown ch vk sft ctl alt) (apply values ks)
+       (if (= kdown 1)
+         (if (= ch 0)
+           (push! (~ con 'keybuf) (case vk
+                                    ;; temporary support of cursor keys
+                                    ((37) 17) ; left
+                                    ((38) 18) ; up
+                                    ((39) 19) ; right
+                                    ((40) 20) ; down
+                                    (else  0)))
+           (push! (~ con 'keybuf) ch)))))
+   (keystate)))
 (define-method getch ((con <vt100>))
   (while (<= (length (~ con 'keybuf)) 0)
     (sys-nanosleep #e100e6) ; 100msec

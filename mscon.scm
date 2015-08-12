@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2015-7-31 v1.22
+;; 2015-8-13 v1.23
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -210,89 +210,93 @@
 (define (keystate)
   (let ((hdl     (sys-get-std-handle STD_INPUT_HANDLE))
         (cmode   0)
-        (done    #f)
-        (ir      '())
         (irlist  '())
-        (retlist '()))
+        (kslist  '()))
     (set! cmode (sys-get-console-mode hdl))
     (sys-set-console-mode hdl 0)
-    (while (not done)
+    (let loop ()
       (set! irlist (sys-peek-console-input hdl))
-      (if (null? irlist)
-        (set! done #t)
-        (begin
-          (sys-read-console-input hdl)
-          (while (not (null? irlist))
-            (set! ir     (car irlist))
-            (set! irlist (cdr irlist))
-            (let1 evt (slot-ref ir 'event-type)
-              (if (= evt KEY_EVENT)
-                (let* ((kdown (if (slot-ref ir 'key.down) 1 0))
-                       (ch    (slot-ref ir 'key.unicode-char))
-                       (vk    (slot-ref ir 'key.virtual-key-code))
-                       (ctls  (slot-ref ir 'key.control-key-state))
-                       (sft   (if (logtest ctls SHIFT_PRESSED) 1 0))
-                       (ctl   (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) 1 0))
-                       (alt   (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) 1 0)))
-                  ;(set! retlist (append! retlist (list (list kdown ch vk sft ctl alt))))
-                  ;(set! retlist (cons (list kdown ch vk sft ctl alt) retlist)) ; 最後にリバースする必要あり
-                  (push! retlist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
-                  )))))))
+      (when (not (null? irlist))
+        (sys-read-console-input hdl)
+        (for-each
+         (lambda (ir)
+           (if (= (slot-ref ir 'event-type) KEY_EVENT)
+             (let* ((kdown (if (slot-ref ir 'key.down) 1 0))
+                    (ch    (slot-ref ir 'key.unicode-char))
+                    (vk    (slot-ref ir 'key.virtual-key-code))
+                    (ctls  (slot-ref ir 'key.control-key-state))
+                    (sft   (if (logtest ctls SHIFT_PRESSED) 1 0))
+                    (ctl   (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) 1 0))
+                    (alt   (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) 1 0)))
+               ;(set! kslist (append! kslist (list (list kdown ch vk sft ctl alt)))) ; 効率がよくない
+               ;(set! kslist (cons (list kdown ch vk sft ctl alt) kslist)) ; 最後にリバースする必要あり
+               (push! kslist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
+               )))
+         irlist)
+        (loop)))
     (sys-set-console-mode hdl cmode)
-    (reverse retlist)))
+    (reverse kslist)))
 
 ;; キーボード状態取得のテスト
 (define (keystate-test)
   (print "HIT ANY KEY! ([ESC] TO EXIT)")
   (let ((done    #f)
-        (ks      '())
         (kslist  '()))
-    (while (not done)
+    (let loop ()
       (set! kslist (keystate))
       ;(print kslist)
-      (while (not (null? kslist))
-        (set! ks     (car kslist))
-        (set! kslist (cdr kslist))
-        (receive (kdown ch vk sft ctl alt) (apply values ks)
-          (cond
-           ((and (= kdown 1) (= vk 27))
-            (set! done #t)
-            (set! kslist '()))
-           (else
-            (print " keydown=" kdown " unicode-char=" ch " virtual-key-code=" vk " shift=" sft " ctrl=" ctl " alt=" alt)))))
-      (sys-nanosleep (* 100 1000000)))) ; 100msec
+      (set! done
+            (any
+             (lambda (ks)
+               (receive (kdown ch vk sft ctl alt) (apply values ks)
+                 (cond
+                  ((and (= kdown 1) (= vk 27))
+                   #t)
+                  (else
+                   (print " keydown="          kdown
+                          " unicode-char="     ch
+                          " virtual-key-code=" vk
+                          " shift="            sft
+                          " ctrl="             ctl
+                          " alt="              alt)
+                   #f))))
+             kslist))
+      (when (not done)
+        (sys-nanosleep (* 100 1000000)) ; 100msec
+        (loop))))
   (undefined))
 
 ;; キーボード入力待ち2
 (define (keywait2 :optional (timeout 0) (interval 100))
-  (let ((done    #f)
-        (ks      '())
+  (let ((ks      '())
         (kslist  '())
         (timecount 0)
         ;; [shift]と[ctrl]と[alt]は除外。Windowsキーとアプリキーも除外
-        (ignorevk  (list VK_SHIFT    VK_CONTROL  VK_MENU     VK_LWIN
-                         VK_RWIN     VK_APPS     VK_LSHIFT   VK_RSHIFT
-                         VK_LCONTROL VK_RCONTROL VK_LMENU    VK_RMENU)))
+        (ignorevk (list VK_SHIFT    VK_CONTROL  VK_MENU   VK_LWIN
+                        VK_RWIN     VK_APPS     VK_LSHIFT VK_RSHIFT
+                        VK_LCONTROL VK_RCONTROL VK_LMENU  VK_RMENU)))
     (if (<= interval 0) (set! interval 100))
     (if (and (> timeout 0) (< timeout interval)) (set! interval timeout))
-    (while (not done)
+    (let loop ()
       (set! kslist (keystate))
       ;(print kslist)
-      (while (not (null? kslist))
-        (set! ks     (car kslist))
-        (set! kslist (cdr kslist))
-        (receive (kdown ch vk sft ctl alt) (apply values ks)
-          (when (and (= kdown 1) (not (memv vk ignorevk)))
-            (set! done #t)
-            (set! kslist '()))))
-      (when (not done)
+      (set! ks (any
+                (lambda (ks)
+                  (receive (kdown ch vk sft ctl alt) (apply values ks)
+                    (if (and (= kdown 1) (not (memv vk ignorevk)))
+                      ks
+                      #f)))
+                kslist))
+      (when (not ks)
         (sys-nanosleep (* interval 1000000))
-        (when (> timeout 0)
+        (cond
+         ((> timeout 0)
           (set! timecount (+ timecount interval))
-          (when (>= timecount timeout)
-            (set! done #t)
-            (set! ks '())))))
-    ks))
+          (if (< timecount timeout)
+            (loop)))
+         (else
+          (loop)))))
+    (if (not ks) '() ks)))
 
 ;; キーボード入力クリア
 (define (keyclear)
