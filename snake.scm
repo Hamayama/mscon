@@ -24,6 +24,8 @@
 (define *wait*    #e100e6) ; 100msec
 (define *waitmin* #e20e6)  ;  20msec
 (define *waitnow* 0)
+(define *speedup* 5)
+(define *extbody* 1)
 
 (define (main args)
   (cond-expand
@@ -100,7 +102,9 @@
 (define (update-snake snake dir new-head extend?)
   `(,dir ,new-head
          ;,@(if extend? (snake-body snake) (drop-right (snake-body snake) 1))))
-         ,@(if extend? (append (snake-body snake) (last-pair snake)) (drop-right (snake-body snake) 1))))
+         ,@(if extend?
+             (append! (snake-body snake) (make-list *extbody* (last snake)))
+             (drop-right (snake-body snake) 1))))
 
 (define (new-food field snake) ; returns food location (x . y)
   (let ([row (array-end field 0)]
@@ -144,7 +148,7 @@
              ;(game-over con)]
              (game-over con score)]
             [(find-food? snake dir food)
-             (if (= (modulo (+ score 1) 5) 0)
+             (if (= (modulo (+ score 1) *speedup*) 0)
                (set! *waitnow* (max (- *waitnow* #e20e6) *waitmin*)))
              (let1 snake. (update-snake snake dir hd #t)
                (run-game con field snake. (new-food field snake.) (+ score 1)))]
