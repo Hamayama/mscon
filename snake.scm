@@ -90,14 +90,15 @@
         [col (array-end field 1)])
     ;(let* ([t (cons (random-integer col) (random-integer row))]
     ;       [dir (~ '(N E W S) (random-integer 4))]
+    ;       [h (next-point t dir)])
+    ;  (if (or (collide-wall? field (car t) (cdr t))
+    ;          (collide-wall? field (car h) (cdr h)))
+    ;    (new-snake field)
+    ;    `(,dir ,h ,t)))))
     (let* ([t (cons (ash col -1) (ash row -1))]
            [dir 'E]
            [h (next-point t dir)])
-      (if (or (collide-wall? field (car t) (cdr t))
-              (collide-wall? field (car h) (cdr h)))
-        (new-snake field)
-        ;`(,dir ,h ,t)))))
-        `(,dir ,h ,t ,t)))))
+      `(,dir ,h ,t ,t))))
 
 (define (update-snake snake dir new-head extend?)
   `(,dir ,new-head
