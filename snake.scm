@@ -8,7 +8,8 @@
  [gauche.os.windows
   (add-load-path "." :relative)
   (display #\cr)(flush) ; allocate console
-  ])
+  ]
+ [else])
 (use gauche.termios)
 (use gauche.parameter)
 (use gauche.array)
