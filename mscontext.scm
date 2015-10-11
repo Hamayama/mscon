@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-11 v1.05
+;; 2015-10-11 v1.06
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -200,5 +200,8 @@
   (putch con #\alarm))
 
 ;(define (make-default-console)
-;  (make <mscon-vt100>))
+;  (cond [(not (mscon-all-available?))
+;         (error "mscontext module requires Gauche v0.9.4 or later.")]
+;        [else
+;         (make <mscon-vt100>)]))
 
