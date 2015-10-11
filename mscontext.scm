@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-8-13 v1.01
+;; 2015-10-11 v1.02
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -48,11 +48,12 @@
   (export
     <vt100>
     call-with-console
-    putch putstr getch chready?
+    putch putstr getch chready? beep
     query-screen-size query-cursor-position move-cursor-to
-    hide-cursor show-cursor
-    reset-terminal clear-screen clear-to-eol
-    set-character-attribute with-character-attribute))
+    hide-cursor show-cursor cursor-down/scroll-up cursor-up/scroll-down
+    reset-terminal clear-screen clear-to-eol clear-to-eos
+    set-character-attribute with-character-attribute
+    make-default-console))
 (select-module mscontext)
 
 (define-class <vt100> ()
@@ -66,6 +67,34 @@
    (proc con)
    (reset-terminal con)))
 
+(define *virtual-key-table*
+  (apply
+   hash-table
+   'eqv?
+   '([38  . KEY_UP]
+     [40  . KEY_DOWN]
+     [39  . KEY_RIGHT]
+     [37  . KEY_LEFT]
+     [35  . KEY_END]
+     [36  . KEY_HOME]
+     [45  . KEY_INS]
+     [46  . KEY_DEL]
+     [34  . KEY_PGDN]
+     [33  . KEY_PGUP]
+     [112 . KEY_F1]
+     [113 . KEY_F2]
+     [114 . KEY_F3]
+     [115 . KEY_F4]
+     [116 . KEY_F5]
+     [117 . KEY_F6]
+     [118 . KEY_F7]
+     [119 . KEY_F8]
+     [120 . KEY_F9]
+     [121 . KEY_F10]
+     [122 . KEY_F11]
+     [123 . KEY_F12]
+     )))
+
 (define-method putch ((con <vt100>) c)
   (display c (~ con'oport)) (flush (~ con'oport)))
 (define-method putstr ((con <vt100>) s)
@@ -76,20 +105,14 @@
      (receive (kdown ch vk sft ctl alt) (apply values ks)
        (if (= kdown 1)
          (if (= ch 0)
-           (push! (~ con 'keybuf) (case vk
-                                    ;; temporary support of cursor keys
-                                    ((37) 17) ; left
-                                    ((38) 18) ; up
-                                    ((39) 19) ; right
-                                    ((40) 20) ; down
-                                    (else  0)))
-           (push! (~ con 'keybuf) ch)))))
+           (push! (~ con 'keybuf) (hash-table-get *virtual-key-table* vk #\null))
+           (push! (~ con 'keybuf) (integer->char ch))))))
    (keystate)))
 (define-method getch ((con <vt100>))
   (while (<= (length (~ con 'keybuf)) 0)
     (sys-nanosleep #e100e6) ; 100msec
     (%getch-sub con))
-  (integer->char (pop! (~ con 'keybuf))))
+  (pop! (~ con 'keybuf)))
 (define-method chready? ((con <vt100>))
   (%getch-sub con)
   ;(print (~ con 'keybuf))
@@ -107,12 +130,26 @@
 (define-method clear-screen ((con <vt100>))
   (cls2))
 (define-method clear-to-eol ((con <vt100>))
-  (display (make-string (- (screen-width) (cursor-x))) (~ con'oport)) (flush (~ con'oport)))
+  (let ((x (cursor-x)) (y (cursor-y)))
+    (display (make-string (- (screen-width) x)) (~ con'oport))
+    (flush (~ con'oport))
+    (locate x y)))
+(define-method clear-to-eos ((con <vt100>))
+  (let ((x (cursor-x)) (y (cursor-y)))
+    (locate 0 y)
+    (display (make-string x) (~ con'oport))
+    (flush (~ con'oport))
+    (locate x y)))
 
 (define-method hide-cursor ((con <vt100>))
   (cursor-off))
 (define-method show-cursor ((con <vt100>))
   (cursor-on))
+
+(define-method cursor-down/scroll-up ((con <vt100>))
+  (locate (cursor-x) (+ (cursor-y) 1)))
+(define-method cursor-up/scroll-down ((con <vt100>))
+  (locate (cursor-x) (- (cursor-y) 1)))
 
 (define-method query-screen-size ((con <vt100>))
   (values (screen-height) (screen-width)))
@@ -156,4 +193,10 @@
      (set-character-attribute con attrs)
      (thunk))
    (reset-character-attribute con)))
+
+(define-method beep ((con <vt100>))
+  (putch con #\alarm))
+
+(define (make-default-console)
+  (make <vt100>))
 

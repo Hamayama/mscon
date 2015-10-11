@@ -147,8 +147,8 @@
       (cond [(or (collide-wall? field x y)
                  (collide-snake? snake x y))
              (render con field (update-snake snake dir hd #f) food)
-             ;(game-over con)]
-             (game-over con score)]
+             ;(game-over con field)]
+             (game-over con field score)]
             [(find-food? snake dir food)
              (if (= (modulo (+ score 1) *speedup*) 0)
                (set! *waitnow* (max (- *waitnow* #e20e6) *waitmin*)))
@@ -159,8 +159,12 @@
 
 (define (get-dir con) ;returns W, S, N, E or #f
   (and (chready? con)
-       ;(case (getch con) [(#\h) 'W] [(#\j) 'S] [(#\k) 'N] [(#\l) 'E] [else #f])))
-       (case (getch con) [(#\h #\x11) 'W] [(#\j #\x14) 'S] [(#\k #\x12) 'N] [(#\l #\x13) 'E] [else #f])))
+       (case (getch con)
+         [(#\h KEY_LEFT) 'W]
+         [(#\j KEY_DOWN) 'S]
+         [(#\k KEY_UP) 'N]
+         [(#\l KEY_RIGHT) 'E]
+         [else #f])))
 
 (define (render con field snake food)
   ;(clear-screen con)
@@ -195,18 +199,20 @@
     (move-cursor-to con y x)
     (putch con ch)))
 
-;(define (game-over con)
-(define (game-over con score)
-  (receive (row col) (query-screen-size con)
-    (move-cursor-to con (ash row -1) (- (ash col -1) 5))
+;(define (game-over con field)
+(define (game-over con field score)
+  (let ([height (array-length field 0)]
+        [width  (array-length field 1)])
+    (move-cursor-to con (ash height -1) (- (ash width -1) 5))
     (set-character-attribute con '(white black reverse))
     (putstr con "Game over!")
-    (move-cursor-to con (+ (ash row -1) 1) (- (ash col -1) 4))
+    (move-cursor-to con (+ (ash height -1) 1) (- (ash width -1) 4))
     (putstr con (format #f "Score:~d" score))
     ;; Exit game with any keypress; however, we don't want to pick
     ;; the keypress right after game over, so wait for a sec, discard
     ;; whatever keys pressed during that, then wait for input.
     (sys-sleep 1)
     (while (chready? con) (getch con))
-    (getch con)))
+    (getch con)
+    (reset-terminal con)))
 
