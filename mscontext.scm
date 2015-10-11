@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-12 v1.08
+;; 2015-10-12 v1.09
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -14,7 +14,7 @@
 ;;
 ;; ＜使い方＞
 ;;   (use mscontext)             ; モジュールをロードします
-;;   (define con (make <mscon-vt100>)) ; コンソールオブジェクトを生成します
+;;   (define con (make <vt100>)) ; コンソールオブジェクトを生成します
 ;;   (query-screen-size con)     ; 画面のサイズ(幅w,高さh)を取得します
 ;;                               ; 戻り値は、h w の多値で返ります(順番に注意)
 ;;   (query-cursor-position con) ; カーソルの座標(x,y)を取得します
@@ -46,25 +46,25 @@
   (use util.match)
   (use mscon)
   (export
-    <mscon-vt100>
+    <vt100>
     call-with-console
     putch putstr getch chready? beep
     query-screen-size query-cursor-position move-cursor-to
     hide-cursor show-cursor cursor-down/scroll-up cursor-up/scroll-down
     reset-terminal clear-screen clear-to-eol clear-to-eos
     set-character-attribute with-character-attribute
-    ;make-default-console
+    make-default-console
     ))
 (select-module mscontext)
 
-(define-class <mscon-vt100> ()
+(define-class <vt100> ()
   ((iport :init-keyword :iport :initform (standard-input-port)) ; not used
    (oport :init-keyword :oport :initform (standard-output-port))
    (input-delay :init-keyword :input-delay :init-value 1000) ; not used
    ;; private
    (keybuf :init-value '())))
 
-(define-method call-with-console ((con <mscon-vt100>) proc)
+(define-method call-with-console ((con <vt100>) proc)
   (unwind-protect
    (proc con)
    (reset-terminal con)))
@@ -97,9 +97,9 @@
      [123 . KEY_F12]
      )))
 
-(define-method putch ((con <mscon-vt100>) c)
+(define-method putch ((con <vt100>) c)
   (display c (~ con'oport)) (flush (~ con'oport)))
-(define-method putstr ((con <mscon-vt100>) s)
+(define-method putstr ((con <vt100>) s)
   (display s (~ con'oport)) (flush (~ con'oport)))
 (define (%getch-sub con)
   (define ignorevk (list VK_SHIFT    VK_CONTROL  VK_MENU   VK_LWIN
@@ -133,53 +133,53 @@
           (else
            (push! (~ con 'keybuf) (integer->char ch)))))))
    (keystate)))
-(define-method getch ((con <mscon-vt100>))
+(define-method getch ((con <vt100>))
   (while (<= (length (~ con 'keybuf)) 0)
     (sys-nanosleep #e100e6) ; 100msec
     (%getch-sub con))
   (pop! (~ con 'keybuf)))
-(define-method chready? ((con <mscon-vt100>))
+(define-method chready? ((con <vt100>))
   (%getch-sub con)
   ;(print (~ con 'keybuf))
   (if (> (length (~ con 'keybuf)) 0) #t #f))
 
-(define-method query-cursor-position ((con <mscon-vt100>))
+(define-method query-cursor-position ((con <vt100>))
   (values (cursor-y) (cursor-x)))
 
-(define-method move-cursor-to ((con <mscon-vt100>) y x)
+(define-method move-cursor-to ((con <vt100>) y x)
   (locate x y))
 
-(define-method reset-terminal ((con <mscon-vt100>))
+(define-method reset-terminal ((con <vt100>))
   (color COL_GRAY COL_BLACK)
   (cursor-on))
-(define-method clear-screen ((con <mscon-vt100>))
+(define-method clear-screen ((con <vt100>))
   (cls2))
-(define-method clear-to-eol ((con <mscon-vt100>))
+(define-method clear-to-eol ((con <vt100>))
   (let ((x (cursor-x)) (y (cursor-y)))
     (display (make-string (- (screen-width) x)) (~ con'oport))
     (flush (~ con'oport))
     (locate x y)))
-(define-method clear-to-eos ((con <mscon-vt100>))
+(define-method clear-to-eos ((con <vt100>))
   (let ((x (cursor-x)) (y (cursor-y)))
     (locate 0 y)
     (display (make-string x) (~ con'oport))
     (flush (~ con'oport))
     (locate x y)))
 
-(define-method hide-cursor ((con <mscon-vt100>))
+(define-method hide-cursor ((con <vt100>))
   (cursor-off))
-(define-method show-cursor ((con <mscon-vt100>))
+(define-method show-cursor ((con <vt100>))
   (cursor-on))
 
-(define-method cursor-down/scroll-up ((con <mscon-vt100>))
+(define-method cursor-down/scroll-up ((con <vt100>))
   (locate (cursor-x) (+ (cursor-y) 1)))
-(define-method cursor-up/scroll-down ((con <mscon-vt100>))
+(define-method cursor-up/scroll-down ((con <vt100>))
   (locate (cursor-x) (- (cursor-y) 1)))
 
-(define-method query-screen-size ((con <mscon-vt100>))
+(define-method query-screen-size ((con <vt100>))
   (values (screen-height) (screen-width)))
 
-(define-method set-character-attribute ((con <mscon-vt100>) spec)
+(define-method set-character-attribute ((con <vt100>) spec)
   (define (get-color-code color)
     (case color
       ((black)      COL_BLACK)
@@ -209,22 +209,22 @@
        (color fc bc)))
     ))
 
-(define-method reset-character-attribute ((con <mscon-vt100>))
+(define-method reset-character-attribute ((con <vt100>))
   (color COL_GRAY COL_BLACK))
 
-(define-method with-character-attribute ((con <mscon-vt100>) attrs thunk)
+(define-method with-character-attribute ((con <vt100>) attrs thunk)
   (unwind-protect
    (begin
      (set-character-attribute con attrs)
      (thunk))
    (reset-character-attribute con)))
 
-(define-method beep ((con <mscon-vt100>))
+(define-method beep ((con <vt100>))
   (putch con #\alarm))
 
-;(define (make-default-console)
-;  (cond [(not (mscon-all-available?))
-;         (error "mscontext module requires Gauche v0.9.4 or later.")]
-;        [else
-;         (make <mscon-vt100>)]))
+(define (make-default-console)
+  (cond [(not (mscon-all-available?))
+         (error "mscontext module requires Gauche v0.9.4 or later.")]
+        [else
+         (make <vt100>)]))
 

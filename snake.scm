@@ -35,7 +35,7 @@
     (cond [(not (mscon-all-available?))
            (exit 1 "This program requires Gauche v0.9.4 or later.")]
           [else
-           (call-with-console (make <mscon-vt100>) game)])]
+           (call-with-console (make <vt100>) game)])]
    [else
     (cond [(not (and (sys-isatty (current-input-port))
                      (sys-isatty (current-output-port))))
