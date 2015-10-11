@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-12 v1.07
+;; 2015-10-12 v1.08
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -108,7 +108,7 @@
   (define (get-ctrl-char vk)
     (if (or (and (>= vk #x41) (<= vk #x5a)) ; #\A-#\Z
             (= vk 32)) ; #\space
-      (integer->char (- vk #x40))
+      (integer->char (- (logand vk (lognot #x20)) #x40))
       (case vk
         ((192) #\x00)  ; #\@
         ((219) #\x1b)  ; #\[
