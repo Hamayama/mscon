@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2015-8-13 v1.23
+;; 2015-10-12 v1.24
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -25,7 +25,9 @@
     COL_DARK_GRAY   COL_BLUE        COL_GREEN       COL_CYAN
     COL_RED         COL_VIOLET      COL_YELLOW      COL_WHITE
     COL_BLUE_MASK   COL_GREEN_MASK  COL_RED_MASK    COL_INTENSITY
-    VK_SHIFT        VK_CONTROL      VK_MENU))
+    VK_SHIFT        VK_CONTROL      VK_MENU         VK_LWIN
+    VK_RWIN         VK_APPS         VK_LSHIFT       VK_RSHIFT
+    VK_LCONTROL     VK_RCONTROL     VK_LMENU        VK_RMENU))
 (select-module mscon)
 
 

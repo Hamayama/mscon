@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-11 v1.06
+;; 2015-10-12 v1.07
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -102,13 +102,36 @@
 (define-method putstr ((con <mscon-vt100>) s)
   (display s (~ con'oport)) (flush (~ con'oport)))
 (define (%getch-sub con)
+  (define ignorevk (list VK_SHIFT    VK_CONTROL  VK_MENU   VK_LWIN
+                         VK_RWIN     VK_APPS     VK_LSHIFT VK_RSHIFT
+                         VK_LCONTROL VK_RCONTROL VK_LMENU  VK_RMENU))
+  (define (get-ctrl-char vk)
+    (if (or (and (>= vk #x41) (<= vk #x5a)) ; #\A-#\Z
+            (= vk 32)) ; #\space
+      (integer->char (- vk #x40))
+      (case vk
+        ((192) #\x00)  ; #\@
+        ((219) #\x1b)  ; #\[
+        ((220) #\x1c)  ; #\\
+        ((221) #\x1d)  ; #\]
+        ((222) #\x1e)  ; #\^
+        ((226) #\x1f)  ; #\_
+        (else  #\x00))))
   (for-each
    (lambda (ks)
      (receive (kdown ch vk sft ctl alt) (apply values ks)
-       (if (= kdown 1)
-         (if (= ch 0)
-           (push! (~ con 'keybuf) (hash-table-get *virtual-key-table* vk #\null))
-           (push! (~ con 'keybuf) (integer->char ch))))))
+       (if (and (= kdown 1) (not (memv vk ignorevk)))
+         (cond
+          ((hash-table-get *virtual-key-table* vk #f)
+           (push! (~ con 'keybuf) (hash-table-get *virtual-key-table* vk)))
+          ((and (= alt 1) (= ctl 1))
+           (push! (~ con 'keybuf) `(ALT ,(get-ctrl-char vk))))
+          ((= alt 1)
+           (push! (~ con 'keybuf) `(ALT ,(integer->char ch))))
+          ((= ctl 1)
+           (push! (~ con 'keybuf) (get-ctrl-char vk)))
+          (else
+           (push! (~ con 'keybuf) (integer->char ch)))))))
    (keystate)))
 (define-method getch ((con <mscon-vt100>))
   (while (<= (length (~ con 'keybuf)) 0)
