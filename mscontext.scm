@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-12 v1.09
+;; 2015-10-12 v1.10
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -156,14 +156,21 @@
 (define-method clear-screen ((con <vt100>))
   (cls2))
 (define-method clear-to-eol ((con <vt100>))
-  (let ((x (cursor-x)) (y (cursor-y)) (w (screen-width)))
-    (display (make-string (- w x)) (~ con'oport))
+  (let ((x   (cursor-x))
+        (y   (cursor-y))
+        (sbw (screen-buffer-width)))
+    (display (make-string (- sbw x)) (~ con'oport))
     (flush (~ con'oport))
     (locate x y)))
 (define-method clear-to-eos ((con <vt100>))
-  (let ((x (cursor-x)) (y (cursor-y)) (w (screen-width)) (h (screen-height)))
-    ;(display (make-string (- (* (- h y) w) x)) (~ con'oport)) ; scroll problem
-    (display (make-string (- (* (- h y) w) x 1)) (~ con'oport))
+  (let ((x   (cursor-x))
+        (y   (cursor-y))
+        (sl  (screen-left))
+        (st  (screen-top))
+        (sw  (screen-width))
+        (sh  (screen-height))
+        (sbw (screen-buffer-width)))
+    (display (make-string (+ (* (+ st sh (- y) -1) sbw) (- x) sl sw -1)) (~ con'oport))
     (flush (~ con'oport))
     (locate x y)))
 
