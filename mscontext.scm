@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-12 v1.10
+;; 2015-10-12 v1.11
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -44,6 +44,7 @@
 ;;
 (define-module mscontext
   (use util.match)
+  (use util.queue)
   (use mscon)
   (export
     <vt100>
@@ -62,7 +63,7 @@
    (oport :init-keyword :oport :initform (standard-output-port))
    (input-delay :init-keyword :input-delay :init-value 1000) ; not used
    ;; private
-   (keybuf :init-value '())))
+   (keybuf :initform (make-queue))))
 
 (define-method call-with-console ((con <vt100>) proc)
   (unwind-protect
@@ -106,43 +107,45 @@
                          VK_RWIN     VK_APPS     VK_LSHIFT VK_RSHIFT
                          VK_LCONTROL VK_RCONTROL VK_LMENU  VK_RMENU))
   (define (get-ctrl-char vk)
-    (if (or (and (>= vk #x41) (<= vk #x5a)) ; #\A-#\Z
-            (= vk 32)) ; #\space
-      (integer->char (- (logand vk (lognot #x20)) #x40))
+    (cond
+     ((or (and (>= vk #x41) (<= vk #x5a)) ; #\A-#\Z
+          (= vk 32))  ; #\space
+      (integer->char (- (logand vk (lognot #x20)) #x40)))
+     (else
       (case vk
-        ((192) #\x00)  ; #\@
-        ((219) #\x1b)  ; #\[
-        ((220) #\x1c)  ; #\\
-        ((221) #\x1d)  ; #\]
-        ((222) #\x1e)  ; #\^
-        ((226) #\x1f)  ; #\_
-        (else  #\x00))))
+        ((192) #\x00) ; #\@
+        ((219) #\x1b) ; #\[
+        ((220) #\x1c) ; #\\
+        ((221) #\x1d) ; #\]
+        ((222) #\x1e) ; #\^
+        ((226) #\x1f) ; #\_
+        (else  #\x00)))))
   (for-each
    (lambda (ks)
      (receive (kdown ch vk sft ctl alt) (apply values ks)
-       ;(if (= ch 3) (push! (~ con 'keybuf) (eof-object))) ; Ctrl-C
+       ;(if (= ch 3) (enqueue! (~ con 'keybuf) (eof-object))) ; Ctrl-C
        (if (and (= kdown 1) (not (memv vk ignorevk)))
          (cond
           ((hash-table-get *virtual-key-table* vk #f)
-           (push! (~ con 'keybuf) (hash-table-get *virtual-key-table* vk)))
+           (enqueue! (~ con 'keybuf) (hash-table-get *virtual-key-table* vk)))
           ((and (= alt 1) (= ctl 1))
-           (push! (~ con 'keybuf) `(ALT ,(get-ctrl-char vk))))
+           (enqueue! (~ con 'keybuf) `(ALT ,(get-ctrl-char vk))))
           ((= alt 1)
-           (push! (~ con 'keybuf) `(ALT ,(integer->char ch))))
+           (enqueue! (~ con 'keybuf) `(ALT ,(integer->char ch))))
           ((= ctl 1)
-           (push! (~ con 'keybuf) (get-ctrl-char vk)))
+           (enqueue! (~ con 'keybuf) (get-ctrl-char vk)))
           (else
-           (push! (~ con 'keybuf) (integer->char ch)))))))
+           (enqueue! (~ con 'keybuf) (integer->char ch)))))))
    (keystate)))
 (define-method getch ((con <vt100>))
-  (while (<= (length (~ con 'keybuf)) 0)
-    (sys-nanosleep #e100e6) ; 100msec
+  (while (queue-empty? (~ con 'keybuf))
+    (sys-nanosleep #e10e6) ; 10msec
     (%getch-sub con))
-  (pop! (~ con 'keybuf)))
+  (dequeue! (~ con 'keybuf)))
 (define-method chready? ((con <vt100>))
   (%getch-sub con)
   ;(print (~ con 'keybuf))
-  (if (> (length (~ con 'keybuf)) 0) #t #f))
+  (if (not (queue-empty? (~ con 'keybuf))) #t #f))
 
 (define-method query-cursor-position ((con <vt100>))
   (values (cursor-y) (cursor-x)))
