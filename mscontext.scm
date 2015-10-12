@@ -120,6 +120,7 @@
   (for-each
    (lambda (ks)
      (receive (kdown ch vk sft ctl alt) (apply values ks)
+       ;(if (= ch 3) (push! (~ con 'keybuf) (eof-object))) ; Ctrl-C
        (if (and (= kdown 1) (not (memv vk ignorevk)))
          (cond
           ((hash-table-get *virtual-key-table* vk #f)
@@ -155,14 +156,14 @@
 (define-method clear-screen ((con <vt100>))
   (cls2))
 (define-method clear-to-eol ((con <vt100>))
-  (let ((x (cursor-x)) (y (cursor-y)))
-    (display (make-string (- (screen-width) x)) (~ con'oport))
+  (let ((x (cursor-x)) (y (cursor-y)) (w (screen-width)))
+    (display (make-string (- w x)) (~ con'oport))
     (flush (~ con'oport))
     (locate x y)))
 (define-method clear-to-eos ((con <vt100>))
-  (let ((x (cursor-x)) (y (cursor-y)))
-    (locate 0 y)
-    (display (make-string x) (~ con'oport))
+  (let ((x (cursor-x)) (y (cursor-y)) (w (screen-width)) (h (screen-height)))
+    ;(display (make-string (- (* (- h y) w) x)) (~ con'oport)) ; scroll problem
+    (display (make-string (- (* (- h y) w) x 1)) (~ con'oport))
     (flush (~ con'oport))
     (locate x y)))
 
