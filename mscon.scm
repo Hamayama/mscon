@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2015-10-12 v1.24
+;; 2015-10-12 v1.25
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -270,13 +270,13 @@
 
 ;; キーボード入力待ち2
 (define (keywait2 :optional (timeout 0) (interval 100))
+  ;; [shift]と[ctrl]と[alt]は除外。Windowsキーとアプリキーも除外
+  (define ignorevk (list VK_SHIFT    VK_CONTROL  VK_MENU   VK_LWIN
+                         VK_RWIN     VK_APPS     VK_LSHIFT VK_RSHIFT
+                         VK_LCONTROL VK_RCONTROL VK_LMENU  VK_RMENU))
   (let ((ks      '())
         (kslist  '())
-        (timecount 0)
-        ;; [shift]と[ctrl]と[alt]は除外。Windowsキーとアプリキーも除外
-        (ignorevk (list VK_SHIFT    VK_CONTROL  VK_MENU   VK_LWIN
-                        VK_RWIN     VK_APPS     VK_LSHIFT VK_RSHIFT
-                        VK_LCONTROL VK_RCONTROL VK_LMENU  VK_RMENU)))
+        (timecount 0))
     (if (<= interval 0) (set! interval 100))
     (if (and (> timeout 0) (< timeout interval)) (set! interval timeout))
     (let loop ()

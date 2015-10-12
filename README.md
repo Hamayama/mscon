@@ -113,6 +113,7 @@
 - 2015-7-31  v1.22 コマンド追加(set-console-title,get-console-title)
 - 2015-8-13  v1.23 一部処理見直し(keystate,keystate-test,keywait2)
 - 2015-10-12 v1.24 仮想キーコードの定数をエクスポート
+- 2015-10-12 v1.25 一部処理見直し(keywait2)
 
 
 (2015-10-12)
