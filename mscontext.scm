@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-12 v1.11
+;; 2015-10-12 v1.12
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -36,7 +36,11 @@
 ;;   (getch con)                 ; 1文字入力します
 ;;                               ; 入力バッファに文字がなければ、入力されるまで待ちます
 ;;                               ; カーソルキー等の特殊なキーを入力した場合は、
-;;                               ; KEY_UP 等のシンボルが返ります(詳細はソースコード参照)
+;;                               ; KEY_UP 等のシンボルが返ります
+;;                               ; Ctrl+xキーを入力した場合は、
+;;                               ; #\x00～#\x1f の制御コード文字が返ります
+;;                               ; Alt+xキーを入力した場合は、(ALT #\x) のようなリストが
+;;                               ; 返ります(詳細はソースコード参照)
 ;;   (hide-cursor con)           ; カーソルを非表示にします
 ;;   (show-cursor con)           ; カーソルを表示します
 ;;   (reset-terminal con)        ; 端末をリセットします
@@ -162,9 +166,13 @@
   (let ((x   (cursor-x))
         (y   (cursor-y))
         (sbw (screen-buffer-width)))
-    (display (make-string (- sbw x)) (~ con'oport))
-    (flush (~ con'oport))
-    (locate x y)))
+    ;(display (make-string (- sbw x)) (~ con'oport))
+    ;(flush (~ con'oport))
+    ;(locate x y)
+    (let1 n (- sbw x)
+      (putcolor n x y COL_GRAY COL_BLACK)
+      (puttext (make-string n) x y ))
+    ))
 (define-method clear-to-eos ((con <vt100>))
   (let ((x   (cursor-x))
         (y   (cursor-y))
@@ -173,9 +181,13 @@
         (sw  (screen-width))
         (sh  (screen-height))
         (sbw (screen-buffer-width)))
-    (display (make-string (+ (* (+ st sh (- y) -1) sbw) (- x) sl sw -1)) (~ con'oport))
-    (flush (~ con'oport))
-    (locate x y)))
+    ;(display (make-string (+ (* (+ st sh (- y) -1) sbw) (- x) sl sw -1)) (~ con'oport))
+    ;(flush (~ con'oport))
+    ;(locate x y)
+    (let1 n (+ (* (+ st sh (- y) -1) sbw) (- x) sl sw)
+      (putcolor n x y COL_GRAY COL_BLACK)
+      (puttext (make-string n) x y ))
+    ))
 
 (define-method hide-cursor ((con <vt100>))
   (cursor-off))
