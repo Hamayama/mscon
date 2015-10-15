@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-12 v1.12
+;; 2015-10-15 v1.13
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -63,8 +63,8 @@
 (select-module mscontext)
 
 (define-class <vt100> ()
-  ((iport :init-keyword :iport :initform (standard-input-port)) ; not used
-   (oport :init-keyword :oport :initform (standard-output-port))
+  ((iport :init-keyword :iport :init-form (standard-input-port)) ; not used
+   (oport :init-keyword :oport :init-form (standard-output-port))
    (input-delay :init-keyword :input-delay :init-value 1000) ; not used
    ;; private
    (keybuf :initform (make-queue))))

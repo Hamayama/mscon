@@ -1,7 +1,7 @@
+;; This program is modified for Windows.
+
 ;;
 ;; snake game - sample for raw console manipulation
-;;
-;; modified for windows
 ;;
 
 (cond-expand
