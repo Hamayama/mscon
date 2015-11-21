@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-10-15 v1.13
+;; 2015-11-22 v1.14
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -57,7 +57,8 @@
     query-screen-size query-cursor-position move-cursor-to
     hide-cursor show-cursor cursor-down/scroll-up cursor-up/scroll-down
     reset-terminal clear-screen clear-to-eol clear-to-eos
-    set-character-attribute with-character-attribute
+    set-character-attribute reset-character-attribute
+    with-character-attribute
     make-default-console
     ))
 (select-module mscontext)

@@ -80,7 +80,7 @@
 ## 環境等
 - OS
   - Windows XP Home SP3
-  - Windows 8 (64bit)
+  - Windows 8.1 (64bit)
 - 言語
   - Gauche v0.9.4
   - Gauche v0.9.3.3
@@ -116,4 +116,4 @@
 - 2015-10-12 v1.25 一部処理見直し(keywait2)
 
 
-(2015-10-12)
+(2015-11-22)
