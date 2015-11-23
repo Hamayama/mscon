@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-11-22 v1.14
+;; 2015-11-23 v1.15
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -204,7 +204,7 @@
   (values (screen-height) (screen-width)))
 
 (define-method set-character-attribute ((con <vt100>) spec)
-  (define (get-color-code color)
+  (define (get-color-code color default-color)
     (case color
       ((black)      COL_BLACK)
       ((red)        COL_DARK_RED)
@@ -214,7 +214,7 @@
       ((magenta)    COL_DARK_VIOLET)
       ((cyan)       COL_DARK_CYAN)
       ((white)      COL_GRAY)
-      (else         COL_BLACK)
+      (else         default-color)
       ))
   (define (get-optional-code opt)
     (case opt
@@ -225,8 +225,8 @@
       ))
   (match spec
     ((fgcolor bgcolor . opts)
-     (let ((fc (get-color-code fgcolor))
-           (bc (get-color-code bgcolor)))
+     (let ((fc (get-color-code fgcolor COL_GRAY))
+           (bc (get-color-code bgcolor COL_BLACK)))
        (for-each (lambda (opt)
                    (set! fc (logior fc (get-optional-code opt))))
                  opts)
