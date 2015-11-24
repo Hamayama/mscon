@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscontext.scm
-;; 2015-11-23 v1.15
+;; 2015-11-24 v1.16
 ;;
 ;; ＜内容＞
 ;;   Gauche の text.console モジュールの動作を、
@@ -60,6 +60,7 @@
     set-character-attribute reset-character-attribute
     with-character-attribute
     make-default-console
+    last-scroll ; for windows ime bug
     ))
 (select-module mscontext)
 
@@ -172,7 +173,7 @@
     ;(locate x y)
     (let1 n (- sbw x)
       (putcolor n x y COL_GRAY COL_BLACK)
-      (puttext (make-string n) x y ))
+      (puttext (make-string n) x y))
     ))
 (define-method clear-to-eos ((con <vt100>))
   (let ((x   (cursor-x))
@@ -187,7 +188,7 @@
     ;(locate x y)
     (let1 n (+ (* (+ st sh (- y) -1) sbw) (- x) sl sw)
       (putcolor n x y COL_GRAY COL_BLACK)
-      (puttext (make-string n) x y ))
+      (puttext (make-string n) x y))
     ))
 
 (define-method hide-cursor ((con <vt100>))
@@ -195,7 +196,19 @@
 (define-method show-cursor ((con <vt100>))
   (cursor-on))
 
+(define-method last-scroll ((con <vt100>))
+  (let ((x   (cursor-x))
+        (y   (cursor-y))
+        (sbw (screen-buffer-width))
+        (sbh (screen-buffer-height)))
+    (cond
+     ((>= y (- sbh 1))
+      (display (make-string sbw) (~ con'oport)) (flush (~ con'oport))
+      (locate x (- sbh 2)))
+      )))
+
 (define-method cursor-down/scroll-up ((con <vt100>))
+  (last-scroll con)
   (locate (cursor-x) (+ (cursor-y) 1)))
 (define-method cursor-up/scroll-down ((con <vt100>))
   (locate (cursor-x) (- (cursor-y) 1)))
