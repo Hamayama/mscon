@@ -1,4 +1,4 @@
-;; This program is modified for Windows.
+;; This program was modified for Windows.
 
 ;;
 ;; snake game - sample for raw console manipulation
