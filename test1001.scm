@@ -9,10 +9,12 @@
 (use math.mt-random)
 
 ;; 乱数
-;;   (randint n1 n2)でn1以上n2以下の整数の乱数を取得する(n1,n2は整数でn1<n2であること)
+;;   (randint n1 n2)でn1以上n2以下の整数の乱数を取得する(n1,n2は整数であること)
 (define randint
   (let1 m (make <mersenne-twister> :seed (sys-time))
-    (lambda (n1 n2) (+ (mt-random-integer m (+ (- n2 n1) 1)) n1))))
+    (lambda (n1 n2)
+      (if (> n1 n2) (let1 t n1 (set! n1 n2) (set! n2 t)))
+      (+ (mt-random-integer m (+ (- n2 n1) 1)) n1))))
 
 ;; 花火情報
 ;;   act   行動モード(=0:なし,=1:上昇中,=2:爆発後)
