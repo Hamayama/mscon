@@ -158,9 +158,9 @@
 
   ;; キー入力のチェックとウェイト
   (if (mscon-all-available?)
-    (let1 ks (keywait2 wait)
-      (when (not (null? ks))
-        ;(print ks)
+    (let1 kslist (keywait2 wait)
+      (when (not (null? kslist))
+        ;(print kslist)
         (set! done #t)))
     (sys-nanosleep (* wait 1000000)))
   )

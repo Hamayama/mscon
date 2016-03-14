@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2015-10-12 v1.25
+;; 2016-3-14 v1.26
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -93,11 +93,12 @@
 (define (cls2 :optional (fc COL_GRAY) (bc COL_BLACK))
   (let* ((hdl   (sys-get-std-handle STD_OUTPUT_HANDLE))
          (cinfo (sys-get-console-screen-buffer-info hdl))
-         (bw    (slot-ref cinfo 'size.x))
-         (bh    (slot-ref cinfo 'size.y))
-         (cattr (get-color-attr fc bc)))
-    (sys-fill-console-output-attribute hdl cattr   (* bw bh) 0 0)
-    (sys-fill-console-output-character hdl #\space (* bw bh) 0 0)
+         (sbw   (slot-ref cinfo 'size.x))
+         (sbh   (slot-ref cinfo 'size.y))
+         (cattr (get-color-attr fc bc))
+         (n     (* sbw sbh)))
+    (sys-fill-console-output-attribute hdl cattr   n 0 0)
+    (sys-fill-console-output-character hdl #\space n 0 0)
     (sys-set-console-cursor-position hdl 0 0)))
 
 ;; 画面のバッファのサイズを設定
@@ -199,10 +200,9 @@
 
 ;; キーボード入力待ち
 (define (keywait)
-  (let ((hdl     (sys-get-std-handle STD_INPUT_HANDLE))
-        (cmode   0)
-        (ch      0))
-    (set! cmode (sys-get-console-mode hdl))
+  (let* ((hdl    (sys-get-std-handle STD_INPUT_HANDLE))
+         (cmode  (sys-get-console-mode hdl))
+         (ch     0))
     (sys-set-console-mode hdl 0)
     (set! ch (read-char))
     (sys-set-console-mode hdl cmode)
@@ -210,11 +210,10 @@
 
 ;; キーボード状態取得
 (define (keystate)
-  (let ((hdl     (sys-get-std-handle STD_INPUT_HANDLE))
-        (cmode   0)
-        (irlist  '())
-        (kslist  '()))
-    (set! cmode (sys-get-console-mode hdl))
+  (let* ((hdl    (sys-get-std-handle STD_INPUT_HANDLE))
+         (cmode  (sys-get-console-mode hdl))
+         (irlist '())
+         (kslist '()))
     (sys-set-console-mode hdl 0)
     (let loop ()
       (set! irlist (sys-peek-console-input hdl))
@@ -247,22 +246,22 @@
     (let loop ()
       (set! kslist (keystate))
       ;(print kslist)
-      (set! done
-            (any
-             (lambda (ks)
-               (receive (kdown ch vk sft ctl alt) (apply values ks)
-                 (cond
-                  ((and (= kdown 1) (= vk 27))
-                   #t)
-                  (else
-                   (print " keydown="          kdown
-                          " unicode-char="     ch
-                          " virtual-key-code=" vk
-                          " shift="            sft
-                          " ctrl="             ctl
-                          " alt="              alt)
-                   #f))))
-             kslist))
+      (any
+       (lambda (ks)
+         (receive (kdown ch vk sft ctl alt) (apply values ks)
+           (cond
+            ((and (= kdown 1) (= vk 27))
+             (set! done #t)
+             #t)
+            (else
+             (print " keydown="          kdown
+                    " unicode-char="     ch
+                    " virtual-key-code=" vk
+                    " shift="            sft
+                    " ctrl="             ctl
+                    " alt="              alt)
+             #f))))
+       kslist)
       (when (not done)
         (sys-nanosleep (* 100 1000000)) ; 100msec
         (loop))))
@@ -274,22 +273,23 @@
   (define ignorevk (list VK_SHIFT    VK_CONTROL  VK_MENU   VK_LWIN
                          VK_RWIN     VK_APPS     VK_LSHIFT VK_RSHIFT
                          VK_LCONTROL VK_RCONTROL VK_LMENU  VK_RMENU))
-  (let ((ks      '())
+  (let ((done    #f)
         (kslist  '())
+        (kslist2 '())
         (timecount 0))
     (if (<= interval 0) (set! interval 100))
     (if (and (> timeout 0) (< timeout interval)) (set! interval timeout))
     (let loop ()
       (set! kslist (keystate))
       ;(print kslist)
-      (set! ks (any
-                (lambda (ks)
-                  (receive (kdown ch vk sft ctl alt) (apply values ks)
-                    (if (and (= kdown 1) (not (memv vk ignorevk)))
-                      ks
-                      #f)))
-                kslist))
-      (when (not ks)
+      (for-each
+       (lambda (ks)
+         (receive (kdown ch vk sft ctl alt) (apply values ks)
+           (when (and (= kdown 1) (not (memv vk ignorevk)))
+             (push! kslist2 ks)
+             (set! done #t))))
+       kslist)
+      (when (not done)
         (sys-nanosleep (* interval 1000000))
         (cond
          ((> timeout 0)
@@ -298,7 +298,7 @@
             (loop)))
          (else
           (loop)))))
-    (if (not ks) '() ks)))
+    (reverse kslist2)))
 
 ;; キーボード入力クリア
 (define (keyclear)
