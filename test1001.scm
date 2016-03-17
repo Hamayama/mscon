@@ -41,7 +41,7 @@
 (define sc       0)                      ; カウンタ(タイミング調整用)
 
 ;; 画面サイズ設定
-(guard (exc ((<system-error> exc) #f))
+(guard (ex ((<system-error> ex) #f))
   (screen-size (max wd wd_buf) (max ht ht_buf))
   (screen-area 0 0 (- wd 1) (- ht 1))
   (screen-size wd ht))
@@ -148,12 +148,7 @@
    hanalist)
 
   ;; 花火の消去
-  (set! hanalist
-        (remove!
-         (lambda (hb)
-           (let1 act (slot-ref hb 'act)
-             (if (<= act 0) #t #f)))
-         hanalist))
+  (set! hanalist (remove! (lambda (hb) (<= (slot-ref hb 'act) 0)) hanalist))
   ;(print hanalist)
 
   ;; キー入力のチェックとウェイト
@@ -167,7 +162,7 @@
 
 ;; 終了
 ;; 画面サイズ設定(元のサイズに戻す)
-(guard (exc ((<system-error> exc) #f))
+(guard (ex ((<system-error> ex) #f))
   (screen-size (max wd wd2 wd_buf) (max ht ht2 ht_buf))
   (screen-area 0 0 (- wd2 1) (- ht2 1))
   (screen-size wd_buf ht_buf))

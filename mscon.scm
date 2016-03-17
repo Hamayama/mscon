@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2016-3-14 v1.26
+;; 2016-3-17 v1.27
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -77,7 +77,7 @@
 
 ;; 全機能利用可能か
 (define (mscon-all-available?)
-  (guard (exc ((<error> exc) #f))
+  (guard (ex ((<error> ex) #f))
     (and
      (procedure? sys-fill-console-output-character)
      (procedure? sys-fill-console-output-attribute)
