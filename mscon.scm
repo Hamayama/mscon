@@ -1,7 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2016-3-17 v1.27
+;; 2016-6-9 v1.28
 ;;
 ;; ＜内容＞
 ;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
@@ -36,6 +36,16 @@
 (define stdin-handle  (sys-get-std-handle STD_INPUT_HANDLE))
 (define stdout-handle (sys-get-std-handle STD_OUTPUT_HANDLE))
 (define stderr-handle (sys-get-std-handle STD_ERROR_HANDLE))
+
+;; 入力については、可能であれば、Windows API は Unicode 版を使用する
+(define sys-peek-console-input
+  (if (global-variable-bound? 'os.windows 'sys-peek-console-input-w)
+    (with-module os.windows sys-peek-console-input-w)
+    (with-module os.windows sys-peek-console-input)))
+(define sys-read-console-input
+  (if (global-variable-bound? 'os.windows 'sys-read-console-input-w)
+    (with-module os.windows sys-read-console-input-w)
+    (with-module os.windows sys-read-console-input)))
 
 
 ;; 色の定数
@@ -77,11 +87,9 @@
 
 ;; 全機能利用可能か
 (define (mscon-all-available?)
-  (guard (ex ((<error> ex) #f))
-    (and
-     (procedure? sys-fill-console-output-character)
-     (procedure? sys-fill-console-output-attribute)
-     (procedure? sys-flush-console-input-buffer))))
+  (and (global-variable-bound? 'os.windows 'sys-fill-console-output-character)
+       (global-variable-bound? 'os.windows 'sys-fill-console-output-attribute)
+       (global-variable-bound? 'os.windows 'sys-flush-console-input-buffer)))
 
 ;; 画面クリア
 (define (cls)
@@ -211,10 +219,10 @@
 ;; キーボード状態取得
 (define (keystate)
   (let* ((hdl    (sys-get-std-handle STD_INPUT_HANDLE))
-         (cmode  (sys-get-console-mode hdl))
+         ;(cmode  (sys-get-console-mode hdl))
          (irlist '())
          (kslist '()))
-    (sys-set-console-mode hdl 0)
+    ;(sys-set-console-mode hdl 0)
     (let loop ()
       (set! irlist (sys-peek-console-input hdl))
       (when (not (null? irlist))
@@ -235,7 +243,7 @@
                )))
          irlist)
         (loop)))
-    (sys-set-console-mode hdl cmode)
+    ;(sys-set-console-mode hdl cmode)
     (reverse kslist)))
 
 ;; キーボード状態取得のテスト

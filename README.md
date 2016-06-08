@@ -121,6 +121,8 @@
 - 2015-10-12 v1.25 一部処理見直し(keywait2)
 - 2016-3-14  v1.26 keywait2の戻り値変更等
 - 2016-3-17  v1.27 変数名変更
+- 2016-6-9   v1.28 一部処理見直し(sys-peek-console-input, sys-read-console-input,  
+  mscon-all-available?, keystate)
 
 
-(2016-3-17)
+(2016-6-9)
