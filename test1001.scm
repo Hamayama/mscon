@@ -1,6 +1,7 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; Windowsコンソールで花火の表示 (msconモジュールのテスト用)
+;; 2016-10-14
 ;;
 (add-load-path "." :relative)
 (display #\cr)(flush) ; コンソールを割り当てる

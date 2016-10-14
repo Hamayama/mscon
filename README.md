@@ -84,9 +84,10 @@
 
 ## 環境等
 - OS
-  - Windows XP Home SP3
   - Windows 8.1 (64bit)
+  - Windows XP Home SP3
 - 言語
+  - Gauche v0.9.5
   - Gauche v0.9.4
   - Gauche v0.9.3.3
 
@@ -123,6 +124,7 @@
 - 2016-3-17  v1.27 変数名変更
 - 2016-6-9   v1.28 一部処理見直し(sys-peek-console-input, sys-read-console-input,  
   mscon-all-available?, keystate)
+- 2016-10-14 v1.29 一部処理見直し(keystate-test)
 
 
-(2016-6-9)
+(2016-10-14)
