@@ -3,7 +3,7 @@
 ![image](image.png)
 
 ## 概要
-- Windows のコマンドプロンプトで Gauche (gosh.exe) を使うときに、  
+- Windows のコマンドプロンプトで Gauche を使うときに、  
   コンソールの制御を可能とするモジュールです。
 
 
@@ -125,6 +125,7 @@
 - 2016-6-9   v1.28 一部処理見直し(sys-peek-console-input, sys-read-console-input,  
   mscon-all-available?, keystate)
 - 2016-10-14 v1.29 一部処理見直し(keystate-test)
+- 2016-11-25 v1.30 コメント修正のみ
 
 
-(2016-10-26)
+(2016-11-25)

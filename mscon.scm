@@ -1,10 +1,10 @@
 ;; -*- coding: utf-8 -*-
 ;;
 ;; mscon.scm
-;; 2016-10-14 v1.29
+;; 2016-11-25 v1.30
 ;;
 ;; ＜内容＞
-;;   Windows のコマンドプロンプトで Gauche(gosh.exe) を使うときに、
+;;   Windows のコマンドプロンプトで Gauche を使うときに、
 ;;   コンソールの制御を可能とするモジュールです。
 ;;
 ;;   詳細については、以下のページを参照ください。
@@ -32,12 +32,14 @@
 
 
 ;; 標準入出力のハンドルの保持
-;; (保持しておかないとエラーになる。Gauche v0.9.4-rc2では修正ずみ)
+;; (保持しておかないとエラーになる。Gauche v0.9.4 では修正済み)
 (define stdin-handle  (sys-get-std-handle STD_INPUT_HANDLE))
 (define stdout-handle (sys-get-std-handle STD_OUTPUT_HANDLE))
 (define stderr-handle (sys-get-std-handle STD_ERROR_HANDLE))
 
-;; 入力については、可能であれば、Windows API は Unicode 版を使用する
+;; 入力については、Windows API は Unicode 版を使用する(将来用)
+;; (現状は、Gauche の内部エンコーディングが utf-8 のときのみ
+;;  Unicode 版になっている)
 (define sys-peek-console-input
   (if (global-variable-bound? 'os.windows 'sys-peek-console-input-w)
     (with-module os.windows sys-peek-console-input-w)
@@ -236,7 +238,7 @@
                     (ctls  (slot-ref ir 'key.control-key-state))
                     (sft   (if (logtest ctls SHIFT_PRESSED) 1 0))
                     (ctl   (if (logtest ctls (logior RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED)) 1 0))
-                    (alt   (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED )) 1 0)))
+                    (alt   (if (logtest ctls (logior RIGHT_ALT_PRESSED  LEFT_ALT_PRESSED))  1 0)))
                ;(set! kslist (append! kslist (list (list kdown ch vk sft ctl alt)))) ; 効率がよくない
                ;(set! kslist (cons (list kdown ch vk sft ctl alt) kslist)) ; 最後にリバースする必要あり
                (push! kslist (list kdown ch vk sft ctl alt)) ; 最後にリバースする必要あり
